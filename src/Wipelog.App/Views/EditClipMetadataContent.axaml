@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             x:Class="Wipelog.App.Views.EditClipMetadataContent"
+             x:DataType="vm:EditClipMetadataDialogViewModel">
+  <StackPanel Spacing="{StaticResource Space14}" MinWidth="440">
+
+    <StackPanel Spacing="{StaticResource Space2}">
+      <TextBlock Classes="muted" Text="Clip" />
+      <TextBlock Text="{Binding DisplayName}" />
+      <TextBlock Classes="muted" FontSize="{StaticResource FontSizeMeta}" Text="{Binding ContentLabel}" />
+    </StackPanel>
+
+    <Grid ColumnDefinitions="*,12,*,12,80" RowDefinitions="Auto" RowSpacing="{StaticResource Space14}">
+      <StackPanel Grid.Column="0" Spacing="{StaticResource Space4}">
+        <TextBlock Classes="muted" Text="Player name" />
+        <TextBox Text="{Binding PlayerName, Mode=TwoWay}" />
+      </StackPanel>
+      <StackPanel Grid.Column="2" Spacing="{StaticResource Space4}">
+        <TextBlock Classes="muted" Text="Realm" />
+        <TextBox Text="{Binding PlayerRealm, Mode=TwoWay}" />
+      </StackPanel>
+      <StackPanel Grid.Column="4" Spacing="{StaticResource Space4}">
+        <TextBlock Classes="muted" Text="Region" />
+        <TextBox Text="{Binding PlayerRegion, Mode=TwoWay}" />
+      </StackPanel>
+    </Grid>
+
+    <Grid ColumnDefinitions="*,12,*">
+      <StackPanel Grid.Column="0" Spacing="{StaticResource Space4}">
+        <TextBlock Classes="muted" Text="Class" />
+        <ComboBox HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding AvailableClasses}"
+                  SelectedItem="{Binding SelectedClass, Mode=TwoWay}" />
+      </StackPanel>
+      <StackPanel Grid.Column="2" Spacing="{StaticResource Space4}">
+        <TextBlock Classes="muted" Text="Spec" />
+        <ComboBox HorizontalAlignment="Stretch"
+                  ItemsSource="{Binding AvailableSpecs}"
+                  SelectedItem="{Binding SelectedSpec, Mode=TwoWay}"
+                  IsEnabled="{Binding IsSpecEnabled}" />
+      </StackPanel>
+    </Grid>
+
+    <StackPanel Spacing="{StaticResource Space6}">
+      <TextBlock Classes="muted" Text="Result" />
+      <StackPanel Orientation="Horizontal" Spacing="20">
+        <RadioButton GroupName="Result"
+                     Content="{Binding SuccessLabel}"
+                     IsChecked="{Binding Success, Mode=TwoWay}" />
+        <RadioButton GroupName="Result"
+                     Content="{Binding FailureLabel}"
+                     IsChecked="{Binding !Success}"
+                     Click="OnFailureClick" />
+      </StackPanel>
+    </StackPanel>
+  </StackPanel>
+</UserControl>

@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             x:Class="Wipelog.App.Views.DateRangeFlyoutView"
+             x:DataType="vm:ClipFiltersViewModel"
+             Width="280"
+             Background="Transparent">
+  <UserControl.Styles>
+    <Style Selector="RadioButton.preset">
+      <Setter Property="FontSize" Value="{StaticResource FontSizeBody}" />
+      <Setter Property="Padding" Value="4,2" />
+    </Style>
+    <Style Selector="TextBlock.field-label">
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="FontSize" Value="{StaticResource FontSizeMeta}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+  </UserControl.Styles>
+
+  <!-- Popup chrome: opaque elevated surface so underlying list text doesn't
+       bleed through, with a SukiUI border + rounded corners to match the
+       chips/cards used elsewhere in the shell. -->
+  <Border Background="{DynamicResource BackgroundElevatedBrush}"
+          BorderBrush="{DynamicResource SukiBorderBrush}"
+          BorderThickness="1"
+          CornerRadius="8"
+          Padding="{StaticResource MarginDialog}">
+  <StackPanel Spacing="{StaticResource Space6}">
+
+    <!-- Preset radios. Each binds its IsChecked TwoWay to RangeMode via the
+         enum-equality converter; the GroupName makes sibling toggling
+         exclusive even if anything reparents these later. -->
+    <RadioButton Classes="preset" GroupName="RangeMode"
+                 Content="Last 7 days"
+                 IsChecked="{Binding RangeMode,
+                             Converter={x:Static vm:EnumEqualityConverter.Instance},
+                             ConverterParameter={x:Static vm:DateRangeMode.Last7Days},
+                             Mode=TwoWay}" />
+    <RadioButton Classes="preset" GroupName="RangeMode"
+                 Content="Last 30 days"
+                 IsChecked="{Binding RangeMode,
+                             Converter={x:Static vm:EnumEqualityConverter.Instance},
+                             ConverterParameter={x:Static vm:DateRangeMode.Last30Days},
+                             Mode=TwoWay}" />
+    <RadioButton Classes="preset" GroupName="RangeMode"
+                 Content="Last 90 days"
+                 IsChecked="{Binding RangeMode,
+                             Converter={x:Static vm:EnumEqualityConverter.Instance},
+                             ConverterParameter={x:Static vm:DateRangeMode.Last90Days},
+                             Mode=TwoWay}" />
+    <RadioButton Classes="preset" GroupName="RangeMode"
+                 Content="All time"
+                 IsChecked="{Binding RangeMode,
+                             Converter={x:Static vm:EnumEqualityConverter.Instance},
+                             ConverterParameter={x:Static vm:DateRangeMode.AllTime},
+                             Mode=TwoWay}" />
+
+    <!-- Divider between presets and custom-range pickers. -->
+    <Border Height="1" Margin="0,4"
+            Background="{DynamicResource SukiBorderBrush}" />
+
+    <!-- Custom From / To. Picking either CalendarDatePicker writes to
+         CustomStart / CustomEnd; the VM's OnCustomStartChanged /
+         OnCustomEndChanged partials flip RangeMode to Custom automatically,
+         which deselects the preset radios above via their bindings. -->
+    <Grid ColumnDefinitions="60,*" RowDefinitions="Auto,Auto"
+          ColumnSpacing="{StaticResource Space8}" RowSpacing="{StaticResource Space6}">
+      <TextBlock Grid.Column="0" Grid.Row="0" Classes="field-label" Text="From" />
+      <CalendarDatePicker Grid.Column="1" Grid.Row="0"
+                          HorizontalAlignment="Stretch"
+                          Watermark="any"
+                          SelectedDate="{Binding CustomStart,
+                                         Converter={x:Static vm:DateTimeOffsetToDateTimeConverter.Instance},
+                                         Mode=TwoWay}" />
+
+      <TextBlock Grid.Column="0" Grid.Row="1" Classes="field-label" Text="To" />
+      <CalendarDatePicker Grid.Column="1" Grid.Row="1"
+                          HorizontalAlignment="Stretch"
+                          Watermark="any"
+                          SelectedDate="{Binding CustomEnd,
+                                         Converter={x:Static vm:DateTimeOffsetToDateTimeConverter.Instance},
+                                         Mode=TwoWay}" />
+    </Grid>
+  </StackPanel>
+  </Border>
+</UserControl>

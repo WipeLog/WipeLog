@@ -1,0 +1,85 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Wipelog.App.Views.ShortcutsContent">
+  <ScrollViewer MaxHeight="560" MaxWidth="520">
+    <StackPanel Spacing="{StaticResource Space14}" Margin="0,4,8,4">
+
+      <TextBlock Classes="title" Text="PLAYER" />
+      <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Space4}">
+        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted tnum" Text="Space" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Play / Pause" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted tnum" Text="J / L" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Skip back / forward 10s" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted tnum" Text="Left / Right" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Skip back / forward 5s" />
+        <TextBlock Grid.Row="3" Grid.Column="0" Classes="muted tnum" Text="Shift+Left / Right" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Skip back / forward 30s" />
+        <TextBlock Grid.Row="4" Grid.Column="0" Classes="muted tnum" Text=", / ." />
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="Step one frame back / forward" />
+        <TextBlock Grid.Row="5" Grid.Column="0" Classes="muted tnum" Text="0, 5 - 9" />
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="Seek to 0%, 50%, … 90% of duration" />
+        <TextBlock Grid.Row="6" Grid.Column="0" Classes="muted tnum" Text="Home / End" />
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="Seek to start / near end" />
+        <TextBlock Grid.Row="7" Grid.Column="0" Classes="muted tnum" Text="Up / Down (or + / -)" />
+        <TextBlock Grid.Row="7" Grid.Column="1" Text="Volume +5 / -5" />
+        <TextBlock Grid.Row="8" Grid.Column="0" Classes="muted tnum" Text="M" />
+        <TextBlock Grid.Row="8" Grid.Column="1" Text="Mute toggle" />
+      </Grid>
+
+      <TextBlock Classes="title" Text="LIST" />
+      <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto" RowSpacing="{StaticResource Space4}">
+        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted tnum" Text="J / K (list focused)" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Previous / next clip" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted tnum" Text="Enter" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Play selected clip" />
+      </Grid>
+
+      <TextBlock Classes="title" Text="CLIP LIST ACTIONS" />
+      <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Space4}">
+        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted" Text="Right-click → Play" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Open the clip in the player" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted" Text="Right-click → Edit metadata…" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Override player name, realm, class, spec, kill/wipe" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" Text="Right-click → Copy file path" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Copy the .mp4 path to the clipboard" />
+        <TextBlock Grid.Row="3" Grid.Column="0" Classes="muted" Text="Right-click → Delete…" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Delete the clip + sidecar (with confirm)" />
+      </Grid>
+
+      <TextBlock Classes="title" Text="TIMELINE" />
+      <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto" RowSpacing="{StaticResource Space4}">
+        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted tnum" Text="T" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Toggle 'All party deaths'" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted tnum" Text="B" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Toggle 'Boss starts'" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted" Text="Click a marker" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Seek back 5s and pause (configurable in Settings)" />
+      </Grid>
+
+      <TextBlock Classes="title" Text="GLOBAL" />
+      <Grid ColumnDefinitions="160,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Space4}">
+        <TextBlock Grid.Row="0" Grid.Column="0" Classes="muted tnum" Text="Alt + 1 … 6" />
+        <TextBlock Grid.Row="0" Grid.Column="1" Text="Switch rail: M+, Raids, Arena, Solo Shuffle, BG, Clips" />
+        <TextBlock Grid.Row="1" Grid.Column="0" Classes="muted tnum" Text="F" />
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Toggle favorite of selected clip" />
+        <TextBlock Grid.Row="2" Grid.Column="0" Classes="muted tnum" Text="Delete" />
+        <TextBlock Grid.Row="2" Grid.Column="1" Text="Delete selected clip (with confirm)" />
+        <TextBlock Grid.Row="3" Grid.Column="0" Classes="muted tnum" Text="Ctrl+F" />
+        <TextBlock Grid.Row="3" Grid.Column="1" Text="Focus search box" />
+        <TextBlock Grid.Row="4" Grid.Column="0" Classes="muted tnum" Text="Ctrl+L" />
+        <TextBlock Grid.Row="4" Grid.Column="1" Text="Focus clip table" />
+        <TextBlock Grid.Row="5" Grid.Column="0" Classes="muted tnum" Text="Ctrl+Q" />
+        <TextBlock Grid.Row="5" Grid.Column="1" Text="Quit (bypasses close-to-tray)" />
+        <TextBlock Grid.Row="6" Grid.Column="0" Classes="muted tnum" Text="Esc" />
+        <TextBlock Grid.Row="6" Grid.Column="1" Text="Clear search if focused, else unfocus" />
+        <TextBlock Grid.Row="7" Grid.Column="0" Classes="muted tnum" Text="?" />
+        <TextBlock Grid.Row="7" Grid.Column="1" Text="Show this help" />
+        <TextBlock Grid.Row="8" Grid.Column="0" Classes="muted tnum" Text="1 – 4 (legacy)" />
+        <TextBlock Grid.Row="8" Grid.Column="1" Text="M+ / Raid / Battleground / Clip — superseded by Alt + N" />
+      </Grid>
+
+      <TextBlock Classes="muted" FontSize="{StaticResource FontSizeMeta}"
+                 Text="Player and global shortcuts are suspended while a text input has focus." />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

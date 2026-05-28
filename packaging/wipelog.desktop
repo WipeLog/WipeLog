@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Wipelog
+GenericName=WoW Gameplay Recorder
+Comment=Record and review World of Warcraft sessions
+Exec=%h/bin/wipelog-app/Wipelog.App
+Icon=wipelog
+Terminal=false
+Categories=AudioVideo;Recorder;Game;
+StartupWMClass=Wipelog.App

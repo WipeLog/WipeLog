@@ -1,0 +1,12 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="using:System">
+  <sys:Double x:Key="FontSizeCaption">10</sys:Double>
+  <sys:Double x:Key="FontSizeMeta">11</sys:Double>
+  <sys:Double x:Key="FontSizeBody">12</sys:Double>
+  <sys:Double x:Key="FontSizeFavorite">13</sys:Double>
+  <sys:Double x:Key="FontSizeTitleBar">14</sys:Double>
+  <sys:Double x:Key="FontSizeHeading">16</sys:Double>
+  <sys:Double x:Key="FontSizeDialogTitle">18</sys:Double>
+  <sys:Double x:Key="FontSizeClipTitle">20</sys:Double>
+</ResourceDictionary>

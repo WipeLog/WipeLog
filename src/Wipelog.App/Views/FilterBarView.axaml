@@ -1,0 +1,154 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             xmlns:views="using:Wipelog.App.Views"
+             x:Class="Wipelog.App.Views.FilterBarView"
+             x:DataType="vm:FilterBarViewModel">
+  <UserControl.Styles>
+    <Style Selector="TextBlock.seg-label">
+      <Setter Property="FontSize" Value="10" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="LetterSpacing" Value="0.6" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+      <Setter Property="VerticalAlignment" Value="Center" />
+      <Setter Property="Margin" Value="0,0,8,0" />
+    </Style>
+
+    <!-- Segmented-control style: a row of RadioButtons that look like buttons.
+         Selected state pops with AccentPrimary; the surrounding Border supplies
+         the rounded-corner container. -->
+    <Style Selector="Border.seg-group">
+      <Setter Property="Background" Value="{DynamicResource SukiStrongBackground}" />
+      <Setter Property="BorderBrush" Value="{DynamicResource SukiControlBorderBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="8" />
+      <Setter Property="Padding" Value="2" />
+    </Style>
+    <Style Selector="RadioButton.seg">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="6" />
+      <Setter Property="Padding" Value="12,4" />
+      <Setter Property="Foreground" Value="{DynamicResource SukiLowText}" />
+      <Setter Property="FontSize" Value="12" />
+      <Setter Property="MinHeight" Value="26" />
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Name="bg" Background="{TemplateBinding Background}"
+                  CornerRadius="{TemplateBinding CornerRadius}"
+                  Padding="{TemplateBinding Padding}">
+            <Border.Transitions>
+              <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.13" />
+              </Transitions>
+            </Border.Transitions>
+            <ContentPresenter Content="{TemplateBinding Content}"
+                              HorizontalAlignment="Center" VerticalAlignment="Center"
+                              Foreground="{TemplateBinding Foreground}" />
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </Style>
+    <Style Selector="RadioButton.seg:checked /template/ Border#bg">
+      <Setter Property="Background" Value="{DynamicResource SukiPrimaryColor}" />
+    </Style>
+    <Style Selector="RadioButton.seg:checked /template/ ContentPresenter">
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource TextInvertedBrush}" />
+    </Style>
+    <Style Selector="RadioButton.seg:pointerover:not(:checked) /template/ Border#bg">
+      <Setter Property="Background" Value="{DynamicResource SukiControlBorderBrush}" />
+    </Style>
+
+    <Style Selector="ToggleButton.favorite-toggle">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+      <Setter Property="FontSize" Value="14" />
+    </Style>
+    <Style Selector="ToggleButton.favorite-toggle:checked /template/ ContentPresenter">
+      <Setter Property="TextElement.Foreground" Value="{DynamicResource FavoriteBrush}" />
+    </Style>
+    <Style Selector="ToggleButton.favorite-toggle:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource SukiStrongBackground}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Background="Transparent"
+          BorderBrush="{DynamicResource SukiBorderBrush}"
+          BorderThickness="0,1,0,1"
+          Padding="12,8">
+    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
+          ColumnSpacing="{StaticResource Space12}">
+
+      <!-- Deaths segmented control -->
+      <TextBlock Grid.Column="0" Classes="seg-label" Text="DEATHS" />
+      <Border Grid.Column="1" Classes="seg-group">
+        <StackPanel Orientation="Horizontal">
+          <RadioButton Classes="seg" GroupName="DeathsFilter" Content="All"
+                       IsChecked="{Binding Display.Deaths,
+                                   Converter={x:Static vm:EnumEqualityConverter.Instance},
+                                   ConverterParameter={x:Static vm:DeathsFilter.All},
+                                   Mode=TwoWay}" />
+          <RadioButton Classes="seg" GroupName="DeathsFilter" Content="Own"
+                       IsChecked="{Binding Display.Deaths,
+                                   Converter={x:Static vm:EnumEqualityConverter.Instance},
+                                   ConverterParameter={x:Static vm:DeathsFilter.Own},
+                                   Mode=TwoWay}" />
+          <RadioButton Classes="seg" GroupName="DeathsFilter" Content="None"
+                       IsChecked="{Binding Display.Deaths,
+                                   Converter={x:Static vm:EnumEqualityConverter.Instance},
+                                   ConverterParameter={x:Static vm:DeathsFilter.None},
+                                   Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Encounters segmented control (On/Off via two RadioButtons) -->
+      <TextBlock Grid.Column="2" Classes="seg-label" Text="ENCOUNTERS" Margin="6,0,8,0" />
+      <Border Grid.Column="3" Classes="seg-group">
+        <StackPanel Orientation="Horizontal">
+          <RadioButton Classes="seg" GroupName="EncountersToggle" Content="On"
+                       IsChecked="{Binding Display.EncountersVisible, Mode=TwoWay}" />
+          <RadioButton Classes="seg" GroupName="EncountersToggle" Content="Off"
+                       IsChecked="{Binding !Display.EncountersVisible, Mode=TwoWay}" />
+        </StackPanel>
+      </Border>
+
+      <!-- Favorites star toggle -->
+      <ToggleButton Grid.Column="4" Classes="favorite-toggle" Content="★"
+                    ToolTip.Tip="Favorites only"
+                    AutomationProperties.Name="Show only favorites"
+                    IsChecked="{Binding Filters.FavoritesOnly, Mode=TwoWay}" />
+
+      <!-- Spacer: column 5 (*) -->
+
+      <!-- Search box -->
+      <TextBox Grid.Column="6" Name="SearchBox"
+               Width="280"
+               Watermark="Start typing…"
+               Text="{Binding Filters.SearchText, Mode=TwoWay}" />
+
+      <!-- Date range button → opens a flyout with presets + calendar pickers
+           (see DateRangeFlyoutView). Label reflects the active range; the
+           flyout's DataContext is the Filters VM so its bindings resolve. -->
+      <Button Grid.Column="7" Width="140"
+              ToolTip.Tip="Date range"
+              HorizontalContentAlignment="Stretch">
+        <Grid ColumnDefinitions="*,Auto">
+          <TextBlock Grid.Column="0" Text="{Binding Filters.RangeLabel}"
+                     VerticalAlignment="Center"
+                     TextTrimming="CharacterEllipsis" />
+          <TextBlock Grid.Column="1" Text="▾"
+                     Margin="6,0,0,0" VerticalAlignment="Center"
+                     Foreground="{DynamicResource TextSecondaryBrush}" />
+        </Grid>
+        <Button.Flyout>
+          <Flyout Placement="Bottom">
+            <views:DateRangeFlyoutView DataContext="{Binding Filters}" />
+          </Flyout>
+        </Button.Flyout>
+      </Button>
+    </Grid>
+  </Border>
+</UserControl>

@@ -1,0 +1,22 @@
+<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <!-- Tombstone body: rounded headstone with flat sides. Arc from (48,96)
+       up over the top and down to (208,96), then straight to the base
+       at y=224. Leaves a 16px margin on left/right and ~16px top. -->
+  <path d="M48 96 A80 80 0 0 1 208 96 L208 224 L48 224 Z"
+        fill="#5865f2"/>
+
+  <!-- "WL" engraving as stroked polylines (font-independent).
+       W is a 4-segment zigzag (top-left → left valley → peak → right
+       valley → top-right). L is the standard vertical + horizontal.
+       Stroke colour is the darker brand-blue hover variant so it reads
+       as "carved in" rather than "applied on top". -->
+  <g stroke="#4752c4" stroke-width="20"
+     stroke-linecap="round" stroke-linejoin="round" fill="none">
+    <path d="M65 130 L85 200 L105 130 L125 200 L145 130"/>
+    <path d="M163 130 L163 200 L195 200"/>
+  </g>
+
+  <!-- Recording bullet: floats slightly off the tombstone's upper-right
+       so it reads as a REC indicator, not a carved flower/sigil. -->
+  <circle cx="210" cy="60" r="20" fill="#f23f42"/>
+</svg>

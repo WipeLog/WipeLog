@@ -1,0 +1,71 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+  <!-- Window background -->
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource BackgroundBaseBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    <Setter Property="FontFamily" Value="{StaticResource ContentControlThemeFontFamily}" />
+  </Style>
+
+  <!-- Tabular numerics for any text marked .tnum -->
+  <Style Selector="TextBlock.tnum">
+    <Setter Property="FontFeatures" Value="+tnum" />
+  </Style>
+
+  <!-- Section titles -->
+  <Style Selector="TextBlock.title">
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    <Setter Property="FontSize" Value="{StaticResource FontSizeMeta}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Margin" Value="0,0,0,4" />
+    <Setter Property="LetterSpacing" Value="1" />
+  </Style>
+
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+  </Style>
+
+  <Style Selector="TextBlock.secondary">
+    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+  </Style>
+
+  <!-- Generic button accent -->
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource AccentPrimaryBrush}" />
+    <Setter Property="Foreground" Value="{DynamicResource TextInvertedBrush}" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="Padding" Value="{StaticResource PaddingButton}" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusSm}" />
+  </Style>
+  <!-- Base transition lives on the ContentPresenter (where Fluent paints the
+       fill) and unconditionally, so both hover-in and hover-out animate. -->
+  <Style Selector="Button.accent /template/ ContentPresenter">
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.13" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource AccentHoverBrush}" />
+  </Style>
+
+  <!-- Tag chip -->
+  <Style Selector="Border.chip">
+    <Setter Property="Background" Value="{DynamicResource BackgroundElevatedBrush}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+    <Setter Property="Padding" Value="{StaticResource PaddingChip}" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.13" />
+        <BrushTransition Property="BorderBrush" Duration="0:0:0.13" />
+      </Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Border.chip:pointerover">
+    <Setter Property="Background" Value="{DynamicResource BackgroundHoverBrush}" />
+  </Style>
+</Styles>

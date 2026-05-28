@@ -1,0 +1,28 @@
+[Unit]
+Description=Wipelog daemon
+Documentation=https://github.com/WipeLog/WipeLog
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+# Adjust these paths to match your install. The defaults assume the daemon
+# is published into ~/bin/wipelog/ and WoW runs through a Wine prefix at
+# ~/.wine. Lutris / Heroic / Bottles users: point --log-dir at the prefix's
+# drive_c. The GUI's "Detect WoW logs" button scans common launcher layouts.
+ExecStart=%h/bin/wipelog/Wipelog.Daemon \
+    --log-dir "%h/.wine/drive_c/Program Files (x86)/World of Warcraft/_retail_/Logs" \
+    --log-pattern "WoWCombatLog-*.txt" \
+    --output "%h/Videos/wow" \
+    --video-quality medium \
+    --framerate 60 \
+    --codec h264 \
+    --audio default_output \
+    --container mp4
+Restart=on-failure
+RestartSec=5s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=graphical-session.target

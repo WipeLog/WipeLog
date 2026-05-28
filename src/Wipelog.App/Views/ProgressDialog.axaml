@@ -1,0 +1,23 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Wipelog.App.Views.ProgressDialog"
+        Width="440" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundSurfaceBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+  <Grid Margin="{StaticResource MarginDialog}" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="{StaticResource Space12}">
+    <TextBlock Grid.Row="0" Name="TitleText"
+               FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" />
+    <TextBlock Grid.Row="1" Name="SubtitleText" Classes="muted"
+               TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"
+               FontSize="{StaticResource FontSizeMeta}" />
+    <ProgressBar Grid.Row="2" Name="Bar"
+                 Minimum="0" Maximum="100" Value="0" Height="6" />
+    <StackPanel Grid.Row="3" Orientation="Horizontal"
+                HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
+      <Button Name="CancelButton" Content="Cancel" Click="OnCancel" />
+    </StackPanel>
+  </Grid>
+</Window>

@@ -1,0 +1,223 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             x:Class="Wipelog.App.Views.ClipsTableView"
+             x:DataType="vm:ClipListViewModel">
+  <UserControl.Resources>
+
+    <!-- The five cell templates the table can use. They are defined as
+         resources here and wired into DataGrid columns by the code-behind
+         based on the rail's ContentType. Three explicit column sets is
+         simpler than one dynamic collection. -->
+
+    <DataTemplate x:Key="DungeonCell" x:DataType="vm:ClipListItemViewModel">
+      <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+        <TextBlock Text="★" Foreground="{DynamicResource FavoriteBrush}" FontSize="{StaticResource FontSizeFavorite}"
+                   VerticalAlignment="Center" IsVisible="{Binding IsFavorite}" />
+        <TextBlock Text="{Binding DungeonOrEncounter}"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="EncounterCell" x:DataType="vm:ClipListItemViewModel">
+      <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+        <TextBlock Text="★" Foreground="{DynamicResource FavoriteBrush}" FontSize="{StaticResource FontSizeFavorite}"
+                   VerticalAlignment="Center" IsVisible="{Binding IsFavorite}" />
+        <TextBlock Text="{Binding DisplayName}"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ContentBadgeCell" x:DataType="vm:ClipListItemViewModel">
+      <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+        <TextBlock Text="★" Foreground="{DynamicResource FavoriteBrush}" FontSize="{StaticResource FontSizeFavorite}"
+                   VerticalAlignment="Center" IsVisible="{Binding IsFavorite}" />
+        <TextBlock Text="{Binding ContentBadgeText}"
+                   FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
+
+    <DataTemplate x:Key="AllTitleCell" x:DataType="vm:ClipListItemViewModel">
+      <TextBlock Text="{Binding DisplayName}"
+                 Foreground="{DynamicResource TextPrimaryBrush}"
+                 VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="KeystoneCell" x:DataType="vm:ClipListItemViewModel">
+      <Border Background="{DynamicResource BackgroundElevatedBrush}"
+              CornerRadius="{StaticResource RadiusMd}" Padding="{StaticResource PaddingChip}"
+              HorizontalAlignment="Left" VerticalAlignment="Center"
+              IsVisible="{Binding KeystoneText,
+                          Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding KeystoneText}"
+                   FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" Classes="tnum"
+                   Foreground="{DynamicResource TextPrimaryBrush}" />
+      </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="DifficultyCell" x:DataType="vm:ClipListItemViewModel">
+      <Border Background="{DynamicResource BackgroundElevatedBrush}"
+              CornerRadius="{StaticResource RadiusMd}" Padding="{StaticResource PaddingChip}"
+              HorizontalAlignment="Left" VerticalAlignment="Center"
+              IsVisible="{Binding DifficultyText,
+                          Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+        <TextBlock Text="{Binding DifficultyText}"
+                   FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold"
+                   Foreground="{DynamicResource TextPrimaryBrush}" />
+      </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="ResultCell" x:DataType="vm:ClipListItemViewModel">
+      <Border Background="{Binding ResultBackgroundBrush}"
+              CornerRadius="{StaticResource RadiusMd}" Padding="{StaticResource PaddingChip}"
+              HorizontalAlignment="Left" VerticalAlignment="Center">
+        <TextBlock Text="{Binding ResultText}"
+                   FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold"
+                   Foreground="{Binding ResultForegroundBrush}" />
+      </Border>
+    </DataTemplate>
+
+    <DataTemplate x:Key="DurationCell" x:DataType="vm:ClipListItemViewModel">
+      <TextBlock Text="{Binding DurationText}" Classes="tnum"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 VerticalAlignment="Center" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="DateCell" x:DataType="vm:ClipListItemViewModel">
+      <TextBlock Text="{Binding DateText}" Classes="tnum"
+                 Foreground="{DynamicResource TextSecondaryBrush}"
+                 VerticalAlignment="Center" />
+    </DataTemplate>
+
+    <DataTemplate x:Key="PovCell" x:DataType="vm:ClipListItemViewModel">
+      <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+        <!-- Spec icon when known; class-color swatch otherwise. -->
+        <Border Width="18" Height="18" CornerRadius="3" ClipToBounds="True"
+                VerticalAlignment="Center" IsVisible="{Binding HasSpecIcon}">
+          <Image Source="{Binding SpecIcon}" Stretch="UniformToFill"
+                 Width="18" Height="18" />
+        </Border>
+        <Border Width="12" Height="12" CornerRadius="2"
+                Background="{Binding ClassColorBrush}" VerticalAlignment="Center"
+                IsVisible="{Binding !HasSpecIcon}" />
+        <TextBlock Text="{Binding PovText}"
+                   Foreground="{DynamicResource TextPrimaryBrush}"
+                   VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </DataTemplate>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <Style Selector="DataGrid">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="GridLinesVisibility" Value="None" />
+      <Setter Property="HeadersVisibility" Value="Column" />
+      <Setter Property="RowHeight" Value="36" />
+      <Setter Property="RowBackground" Value="Transparent" />
+      <Setter Property="HorizontalScrollBarVisibility" Value="Disabled" />
+    </Style>
+    <Style Selector="DataGridColumnHeader">
+      <Setter Property="Background" Value="{DynamicResource BackgroundSurfaceBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Padding" Value="12,6" />
+      <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+      <Setter Property="BorderThickness" Value="0,0,0,1" />
+    </Style>
+    <Style Selector="DataGridRow:pointerover /template/ Rectangle#PART_BackgroundRectangle">
+      <Setter Property="Fill" Value="{DynamicResource BackgroundElevatedBrush}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="DataGridRow:selected /template/ Rectangle#PART_BackgroundRectangle">
+      <Setter Property="Fill" Value="{DynamicResource BackgroundSelectedBrush}" />
+      <Setter Property="Opacity" Value="1" />
+    </Style>
+    <Style Selector="DataGridCell">
+      <Setter Property="Padding" Value="12,0" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+  </UserControl.Styles>
+
+  <Grid RowDefinitions="*,Auto">
+    <Grid Grid.Row="0">
+      <DataGrid Name="ClipsGrid"
+                ItemsSource="{Binding Items}"
+                SelectedItem="{Binding SelectedItem, Mode=TwoWay}"
+                IsReadOnly="True"
+                CanUserResizeColumns="True"
+                CanUserSortColumns="True"
+                CanUserReorderColumns="False"
+                SelectionMode="Extended">
+        <DataGrid.ContextMenu>
+          <ContextMenu>
+            <MenuItem Header="Play" Click="OnContextPlay" />
+            <MenuItem Header="Edit metadata…" Click="OnContextEditMetadata" />
+            <Separator />
+            <MenuItem Header="Create masked copy for sharing…" Click="OnContextMask" />
+            <MenuItem Header="Copy file path" Click="OnContextCopyPath" />
+            <Separator />
+            <MenuItem Header="Delete…" Click="OnContextDelete" />
+          </ContextMenu>
+        </DataGrid.ContextMenu>
+        <!-- Columns are populated by ClipsTableView code-behind based on
+             ContentTypeFilter, since the variants share a single template
+             set defined above. -->
+      </DataGrid>
+
+      <!-- Empty state -->
+      <StackPanel Name="EmptyState"
+                  HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Spacing="{StaticResource Space12}" IsVisible="False">
+        <TextBlock Classes="muted" HorizontalAlignment="Center"
+                   Text="No clips match your filters." />
+        <Button Classes="accent" Content="Clear all filters"
+                HorizontalAlignment="Center"
+                Click="OnClearFiltersClick" />
+      </StackPanel>
+    </Grid>
+
+    <Border Grid.Row="1"
+            BorderBrush="{DynamicResource BorderSubtleBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="{StaticResource PaddingButton}">
+      <Panel>
+        <!-- Default footer: status text + loading indicator. -->
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding !HasSelection}">
+          <TextBlock Grid.Column="0" Classes="muted" FontSize="{StaticResource FontSizeMeta}"
+                     Text="{Binding StatusText}"
+                     VerticalAlignment="Center" />
+          <TextBlock Grid.Column="1" Classes="muted" FontSize="{StaticResource FontSizeMeta}"
+                     Text="Loading…" VerticalAlignment="Center"
+                     IsVisible="{Binding IsLoading}" />
+        </Grid>
+        <!-- Selection footer: count + bulk-action buttons. -->
+        <Grid ColumnDefinitions="*,Auto" IsVisible="{Binding HasSelection}">
+          <TextBlock Grid.Column="0" Classes="muted" FontSize="{StaticResource FontSizeMeta}"
+                     VerticalAlignment="Center"
+                     Text="{Binding SelectedCount, StringFormat='{}{0} selected'}" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal"
+                      Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+            <Button Content="🗑 Delete"
+                    Background="{DynamicResource DangerBrush}" Foreground="White"
+                    Command="{Binding DeleteSelectedCommand}"
+                    ToolTip.Tip="Delete the selected clips and their files" />
+            <Button Content="📦 Archive…"
+                    Classes="accent"
+                    Command="{Binding ArchiveSelectedCommand}"
+                    ToolTip.Tip="Save the selected clips as a single .zip" />
+            <Button Content="Clear"
+                    Background="Transparent"
+                    Command="{Binding ClearSelectionCommand}"
+                    ToolTip.Tip="Clear selection" />
+          </StackPanel>
+        </Grid>
+      </Panel>
+    </Border>
+  </Grid>
+</UserControl>

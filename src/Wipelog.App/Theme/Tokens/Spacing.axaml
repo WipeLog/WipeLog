@@ -1,0 +1,29 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="using:System">
+  <!-- Padding (Thickness) -->
+  <Thickness x:Key="PaddingChip">8,2</Thickness>
+  <Thickness x:Key="PaddingIconButton">8,4</Thickness>
+  <Thickness x:Key="PaddingButton">12,6</Thickness>
+  <Thickness x:Key="PaddingSurface">12,8</Thickness>
+
+  <!-- Margin (Thickness) -->
+  <Thickness x:Key="MarginRowSm">0,2</Thickness>
+  <Thickness x:Key="MarginTight">4</Thickness>
+  <Thickness x:Key="MarginChipFlow">0,6,8,0</Thickness>
+  <Thickness x:Key="MarginDialog">24</Thickness>
+
+  <!-- Corner radius -->
+  <CornerRadius x:Key="RadiusSm">4</CornerRadius>
+  <CornerRadius x:Key="RadiusMd2">6</CornerRadius>
+  <CornerRadius x:Key="RadiusMd">10</CornerRadius>
+
+  <!-- Gap scale (double) — for Grid/StackPanel Spacing, RowSpacing, ColumnSpacing -->
+  <sys:Double x:Key="Space2">2</sys:Double>
+  <sys:Double x:Key="Space4">4</sys:Double>
+  <sys:Double x:Key="Space6">6</sys:Double>
+  <sys:Double x:Key="Space8">8</sys:Double>
+  <sys:Double x:Key="Space12">12</sys:Double>
+  <sys:Double x:Key="Space14">14</sys:Double>
+  <sys:Double x:Key="Space16">16</sys:Double>
+</ResourceDictionary>

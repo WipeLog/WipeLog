@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="Wipelog.Core.Tests" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Branded chat-overlay mask (Wipelog logo + wordmark), composited over the
+         black box by ChatOverlayProcessor. Extracted to a temp file at runtime. -->
+    <EmbeddedResource Include="Assets/wipelog-mask.png" LogicalName="wipelog-mask.png" />
+  </ItemGroup>
+</Project>

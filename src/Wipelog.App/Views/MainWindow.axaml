@@ -1,0 +1,153 @@
+<suki:SukiWindow xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Wipelog.App.ViewModels"
+        xmlns:views="using:Wipelog.App.Views"
+        xmlns:suki="https://github.com/kikipoulet/SukiUI"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1280" d:DesignHeight="800"
+        x:Class="Wipelog.App.Views.MainWindow"
+        x:DataType="vm:MainWindowViewModel"
+        Title="{Binding Title}"
+        Icon="avares://Wipelog.App/Assets/Icons/wipelog.png"
+        Width="1280" Height="800"
+        MinWidth="900" MinHeight="500"
+        BackgroundStyle="GradientSoft">
+
+  <suki:SukiWindow.Hosts>
+    <suki:SukiToastHost Manager="{Binding ToastManager}" />
+    <suki:SukiDialogHost Manager="{Binding DialogManager}" />
+  </suki:SukiWindow.Hosts>
+
+  <suki:SukiWindow.LogoContent>
+    <Image Source="avares://Wipelog.App/Assets/Icons/wipelog.png"
+           Width="18" Height="18" VerticalAlignment="Center" Margin="6,0,0,0" />
+  </suki:SukiWindow.LogoContent>
+
+  <Grid>
+    <!-- Invisible focus anchor for global Tunnel KeyDown routing (see code-behind). -->
+    <Button Name="KeyboardAnchor" Focusable="True"
+            Width="1" Height="1" Opacity="0"
+            IsHitTestVisible="False" IsTabStop="False"
+            Background="Transparent" BorderThickness="0" Padding="0"
+            HorizontalAlignment="Left" VerticalAlignment="Top" />
+
+    <!-- Category side menu. UseCustomContent keeps a single persistent browser
+         mounted (so the video player isn't rebuilt on category switch); the
+         menu only drives the content-type filter via SelectedItem. -->
+    <suki:SukiSideMenu IsVisible="{Binding !IsShowingSettings}"
+                       UseCustomContent="True"
+                       ItemsSource="{Binding SideNav.Categories}"
+                       SelectedItem="{Binding SideNav.SelectedCategory, Mode=TwoWay}">
+
+      <suki:SukiSideMenu.ItemTemplate>
+        <DataTemplate x:DataType="vm:NavCategoryViewModel">
+          <suki:SukiSideMenuItem Classes="Compact" Header="{Binding HeaderText}">
+            <suki:SukiSideMenuItem.Icon>
+              <Path Width="22" Height="22" Stretch="Uniform"
+                    Data="{Binding Icon}"
+                    Fill="{Binding $parent[suki:SukiSideMenuItem].Foreground}" />
+            </suki:SukiSideMenuItem.Icon>
+          </suki:SukiSideMenuItem>
+        </DataTemplate>
+      </suki:SukiSideMenu.ItemTemplate>
+
+      <!-- Footer: live recording status + Record/Stop + ACL warning + Settings. -->
+      <suki:SukiSideMenu.FooterContent>
+        <StackPanel Margin="12,8" Spacing="8" DataContext="{Binding SideNav}">
+          <StackPanel Spacing="2" Margin="20,0,0,0"
+                      DataContext="{Binding DaemonStatus}"
+                      ToolTip.Tip="{Binding Tooltip}">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Ellipse Width="9" Height="9" VerticalAlignment="Center" Fill="{Binding DotBrush}" />
+              <TextBlock Text="{Binding StateLabel}" FontWeight="SemiBold"
+                         Foreground="{DynamicResource SukiText}" VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="{Binding ActivityLine}" IsVisible="{Binding IsRecording}"
+                       Margin="17,0,0,0" FontSize="12" TextTrimming="CharacterEllipsis"
+                       Foreground="{DynamicResource SukiLowText}" />
+            <TextBlock Text="{Binding ElapsedLine}" IsVisible="{Binding IsRecording}"
+                       Margin="17,0,0,0" FontSize="11" FontFamily="monospace"
+                       Foreground="{DynamicResource SukiMuteText}" />
+            <Button IsVisible="{Binding IsRecording}" Classes="Flat"
+                    Command="{Binding StopRecordingCommand}"
+                    Margin="10,4,0,0" Padding="10,3" HorizontalAlignment="Left"
+                    Background="{DynamicResource DangerBrush}"
+                    Foreground="{DynamicResource TextInvertedBrush}"
+                    ToolTip.Tip="Stop the current recording."
+                    AutomationProperties.Name="Stop current recording">
+              <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                <Rectangle Width="8" Height="8" Fill="{DynamicResource TextInvertedBrush}" VerticalAlignment="Center" />
+                <TextBlock Text="Stop" VerticalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Border IsVisible="{Binding AdvancedLoggingDisabled}"
+                    Margin="17,6,0,0" Padding="6,3"
+                    Background="{DynamicResource WarningBackgroundBrush}"
+                    BorderBrush="{DynamicResource WarningBrush}" BorderThickness="0,0,0,2"
+                    CornerRadius="3"
+                    ToolTip.Tip="WoW's Advanced Combat Logging is disabled. Boss HP%, kill-blow attribution, and raid composition won't be captured. Fix it in WoW: Network options -> Advanced Combat Logging.">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="!" FontSize="11" FontWeight="Bold"
+                           Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center"
+                           Width="10" TextAlignment="Center" />
+                <TextBlock Text="Advanced Combat Logging OFF" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SukiLowText}" VerticalAlignment="Center"
+                           TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+
+          <Button Margin="0"
+                  HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Left"
+                  IsVisible="{Binding DaemonStatus.IsIdle}"
+                  Command="{Binding DaemonStatus.StartManualRecordingCommand}"
+                  ToolTip.Tip="Start a free-form manual recording. Click Stop to save it."
+                  AutomationProperties.Name="Start manual recording">
+            <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Ellipse Width="8" Height="8" Fill="{DynamicResource DangerBrush}" VerticalAlignment="Center" />
+              <TextBlock Text="Record" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+          <Button Classes="Flat" HorizontalAlignment="Stretch"
+                  HorizontalContentAlignment="Left"
+                  Command="{Binding OpenSettingsCommand}"
+                  AutomationProperties.Name="Open settings">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+              <TextBlock Text="⚙" VerticalAlignment="Center" />
+              <TextBlock Text="Settings" VerticalAlignment="Center" />
+            </StackPanel>
+          </Button>
+        </StackPanel>
+      </suki:SukiSideMenu.FooterContent>
+
+      <!-- Persistent main content: player + filter + table (left) and the
+           content-type-aware details panel (right). -->
+      <suki:SukiSideMenu.Content>
+        <Grid ColumnDefinitions="*,300">
+          <Grid Grid.Column="0" RowDefinitions="*,Auto,*">
+            <views:PlayerView Grid.Row="0" DataContext="{Binding Player}" />
+            <views:FilterBarView Grid.Row="1" DataContext="{Binding FilterBar}" />
+            <Border Grid.Row="2">
+              <views:ClipsTableView DataContext="{Binding ClipList}" />
+            </Border>
+          </Grid>
+
+          <Border Grid.Column="1"
+                  BorderBrush="{DynamicResource SukiBorderBrush}"
+                  BorderThickness="1,0,0,0">
+            <views:ClipDetailsView DataContext="{Binding ClipDetails}" />
+          </Border>
+        </Grid>
+      </suki:SukiSideMenu.Content>
+    </suki:SukiSideMenu>
+
+    <!-- Full-page settings overlay. -->
+    <views:SettingsView DataContext="{Binding Settings}"
+                    HorizontalAlignment="Stretch"
+                    VerticalAlignment="Stretch"
+                    IsVisible="{Binding $parent[suki:SukiWindow].((vm:MainWindowViewModel)DataContext).IsShowingSettings}" />
+  </Grid>
+</suki:SukiWindow>

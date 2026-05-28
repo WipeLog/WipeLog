@@ -1,0 +1,4 @@
+5/10/2026 17:00:00.000  SPELL_DAMAGE,Creature-0-1469-2657-12-225829-0001,"Imperator Averzian",0xa48,0x0,Player-1-AELARA,"Aelara-DefiasBrotherhood-EU",0x511,0x0,432123,"Cleave",1,12345,0,1,0,0,0,nil,nil,nil,nil
+5/10/2026 17:00:01.000  SWING_DAMAGE,Creature-0-1469-2657-12-225829-0001,"Imperator Averzian",0xa48,0x0,Player-1-AELARA,"Aelara-DefiasBrotherhood-EU",0x511,0x0,98765,0,1,0,0,0,nil,nil,nil,nil
+5/10/2026 17:00:02.000  SPELL_PERIODIC_DAMAGE,Creature-0-1469-2657-12-225829-0001,"Imperator Averzian",0xa48,0x0,Player-1-AELARA,"Aelara-DefiasBrotherhood-EU",0x511,0x0,431234,"Decay",32,5500,0,32,0,0,0,nil,nil,nil,nil
+5/10/2026 17:00:03.000  SWING_DAMAGE_LANDED,0000000000000000,nil,0x80000000,0x80000000,Player-1-AELARA,"Aelara-DefiasBrotherhood-EU",0x511,0x0,99999,99999,1,0,0,0,nil,nil,nil,nil

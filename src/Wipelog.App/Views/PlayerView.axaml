@@ -1,0 +1,182 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             xmlns:ctrl="using:Wipelog.App.Controls"
+             xmlns:vlc="clr-namespace:LibVLCSharp.Avalonia;assembly=LibVLCSharp.Avalonia"
+             x:Class="Wipelog.App.Views.PlayerView"
+             x:DataType="vm:PlayerViewModel">
+  <UserControl.Resources>
+    <!-- Material-style 24-viewBox transport glyphs. Same Fill-binding pattern
+         the settings tab rail uses, so each icon picks up the button's
+         Foreground (white on the accent fill, muted text on the flat ones). -->
+    <StreamGeometry x:Key="IconPlay">M8,5V19L19,12Z</StreamGeometry>
+    <StreamGeometry x:Key="IconPause">M6,19H10V5H6V19M14,5V19H18V5H14Z</StreamGeometry>
+    <StreamGeometry x:Key="IconVolumeUp">M3,9V15H7L12,20V4L7,9H3M16.5,12C16.5,10.23 15.5,8.71 14,7.97V16C15.5,15.29 16.5,13.77 16.5,12M14,3.23V5.29C16.89,6.15 19,8.83 19,12C19,15.17 16.89,17.85 14,18.7V20.77C18,19.86 21,16.28 21,12C21,7.72 18,4.14 14,3.23Z</StreamGeometry>
+    <StreamGeometry x:Key="IconVolumeOff">M12,4L9.91,6.09L12,8.18M4.27,3L3,4.27L7.73,9H3V15H7L12,20V13.27L16.25,17.53C15.58,18.04 14.83,18.46 14,18.7V20.77C15.38,20.45 16.63,19.82 17.69,18.96L19.73,21L21,19.73L12,10.73M19,12C19,12.94 18.8,13.82 18.46,14.64L19.97,16.15C20.62,14.91 21,13.5 21,12C21,7.72 18,4.14 14,3.23V5.29C16.89,6.15 19,8.83 19,12M16.5,12C16.5,10.23 15.5,8.71 14,7.97V10.18L16.45,12.63C16.5,12.43 16.5,12.21 16.5,12Z</StreamGeometry>
+  </UserControl.Resources>
+  <Grid RowDefinitions="*,Auto" Background="#000000">
+
+    <!-- Video surface -->
+    <Grid Grid.Row="0">
+      <vlc:VideoView Name="VideoSurface" MediaPlayer="{Binding MediaPlayer}" />
+      <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center"
+                  Spacing="8" IsVisible="{Binding !HasMedia}">
+        <TextBlock Text="▶" FontSize="40" HorizontalAlignment="Center"
+                   Foreground="{DynamicResource TextMutedBrush}" Opacity="0.5" />
+        <TextBlock HorizontalAlignment="Center"
+                   Foreground="{DynamicResource TextMutedBrush}"
+                   Text="Select a clip to play" />
+      </StackPanel>
+      <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                 Foreground="{DynamicResource DangerBrush}"
+                 Text="{Binding ErrorMessage}"
+                 IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+    </Grid>
+
+    <!-- Single transport block: ▶/⏸  🔊  ============== scrub ============= time
+                                          ============== tombstone strip below.
+         Transparent background lets the SukiWindow gradient flow through from
+         the gallery below; the top hairline picks up SukiBorderBrush to match
+         the details-panel divider and settings rail. -->
+    <Border Grid.Row="1"
+            Background="Transparent"
+            BorderBrush="{DynamicResource SukiBorderBrush}"
+            BorderThickness="0,1,0,0"
+            Padding="12,6">
+      <Grid ColumnDefinitions="Auto,Auto,*,Auto"
+            RowDefinitions="Auto,Auto"
+            ColumnSpacing="{StaticResource Space8}">
+
+        <!-- Play/Pause sits in line with the scrub bar. Icon + tooltip flip
+             with IsPlaying so the button reflects current state instead of
+             always showing both icons. -->
+        <Button Grid.Column="0" Grid.Row="0" Name="PlayPauseButton"
+                Classes="accent"
+                MinWidth="44" Padding="10,4"
+                HorizontalContentAlignment="Center"
+                VerticalAlignment="Center"
+                Click="OnPlayPauseClick"
+                IsEnabled="{Binding HasMedia}"
+                ToolTip.Tip="{Binding PlayPauseTooltip}"
+                AutomationProperties.Name="Play/Pause">
+          <Grid>
+            <Path Width="14" Height="14" Stretch="Uniform"
+                  Data="{StaticResource IconPlay}"
+                  Fill="{Binding $parent[Button].Foreground}"
+                  IsVisible="{Binding !IsPlaying}" />
+            <Path Width="14" Height="14" Stretch="Uniform"
+                  Data="{StaticResource IconPause}"
+                  Fill="{Binding $parent[Button].Foreground}"
+                  IsVisible="{Binding IsPlaying}" />
+          </Grid>
+        </Button>
+
+        <!-- Volume: icon flips to muted-speaker when Volume==0; clicking the
+             icon toggles mute (parity with the M shortcut). The audio-track
+             dropdown is only shown when the clip has more than one stream
+             (true for recordings using the multi-track preset). -->
+        <StackPanel Grid.Column="1" Grid.Row="0"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource Space6}"
+                    VerticalAlignment="Center">
+          <Button Background="Transparent" BorderThickness="0"
+                  Padding="4,2"
+                  IsEnabled="{Binding HasMedia}"
+                  Click="OnMuteClick"
+                  ToolTip.Tip="Mute / unmute (M)"
+                  AutomationProperties.Name="Mute"
+                  VerticalAlignment="Center">
+            <Grid>
+              <Path Width="16" Height="16" Stretch="Uniform"
+                    Data="{StaticResource IconVolumeUp}"
+                    Fill="{Binding $parent[Button].Foreground}"
+                    IsVisible="{Binding !IsMuted}" />
+              <Path Width="16" Height="16" Stretch="Uniform"
+                    Data="{StaticResource IconVolumeOff}"
+                    Fill="{Binding $parent[Button].Foreground}"
+                    IsVisible="{Binding IsMuted}" />
+            </Grid>
+          </Button>
+          <Slider Width="90"
+                  Minimum="0" Maximum="100"
+                  Value="{Binding Volume, Mode=TwoWay}"
+                  IsEnabled="{Binding HasMedia}"
+                  AutomationProperties.Name="Volume"
+                  VerticalAlignment="Center" />
+          <ComboBox MinWidth="160"
+                    IsVisible="{Binding HasMultipleAudioTracks}"
+                    IsEnabled="{Binding HasMedia}"
+                    ItemsSource="{Binding AudioTracks}"
+                    SelectedItem="{Binding SelectedAudioTrack, Mode=TwoWay}"
+                    ToolTip.Tip="Audio track — pick one stream to listen to in isolation."
+                    AutomationProperties.Name="Audio track"
+                    VerticalAlignment="Center">
+            <ComboBox.ItemTemplate>
+              <DataTemplate DataType="vm:AudioTrackChoice">
+                <TextBlock Text="{Binding Display}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <!-- Scrub bar with encounter regions (height ~18 px) -->
+        <Grid Grid.Column="2" Grid.Row="0" VerticalAlignment="Center">
+          <ctrl:ScrubBar Name="ScrubBar"
+                         CurrentPositionMs="{Binding PositionMs}"
+                         Events="{Binding Timeline.Events}"
+                         ClipDurationMs="{Binding Timeline.ClipDurationMs}"
+                         PreRollMs="{Binding Timeline.PreRollMs}"
+                         PostRollMs="{Binding Timeline.PostRollMs}"
+                         ContentType="{Binding Timeline.ContentType}"
+                         ShowBossStarts="{Binding DisplayOptions.EncountersVisible}" />
+        </Grid>
+
+        <!-- Time / duration label + speed selector on the right -->
+        <StackPanel Grid.Column="3" Grid.Row="0"
+                    Orientation="Horizontal"
+                    Spacing="{StaticResource Space8}"
+                    VerticalAlignment="Center">
+          <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space4}"
+                      VerticalAlignment="Center">
+            <TextBlock Classes="tnum" Text="{Binding PositionText}"
+                       Foreground="{DynamicResource TextPrimaryBrush}" />
+            <TextBlock Classes="muted" Text="/" />
+            <TextBlock Classes="tnum muted" Text="{Binding DurationText}" />
+          </StackPanel>
+          <ComboBox MinWidth="64"
+                    ItemsSource="{Binding PlaybackRateChoices}"
+                    SelectedItem="{Binding PlaybackRate, Mode=TwoWay}"
+                    IsEnabled="{Binding HasMedia}"
+                    ToolTip.Tip="Playback speed"
+                    AutomationProperties.Name="Playback speed"
+                    VerticalAlignment="Center">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <TextBlock Text="{Binding StringFormat='{}{0}×'}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+
+        <!-- Tombstone strip directly under the scrub bar, sharing column 2's X
+             axis. -->
+        <Grid Grid.Column="2" Grid.Row="1">
+          <ctrl:TombstoneStrip Name="TombstoneStrip"
+                               Events="{Binding Timeline.Events}"
+                               ClipDurationMs="{Binding Timeline.ClipDurationMs}"
+                               PreRollMs="{Binding Timeline.PreRollMs}"
+                               RecordingStartedAt="{Binding Timeline.RecordingStartedAt}"
+                               RecordingPlayerName="{Binding Timeline.RecordingPlayerName}"
+                               DeathsFilter="{Binding DisplayOptions.Deaths}"
+                               ShowBossStarts="{Binding DisplayOptions.EncountersVisible}" />
+          <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                     IsHitTestVisible="False"
+                     FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{DynamicResource TextMutedBrush}"
+                     IsVisible="{Binding Timeline.ShowEmptyState}"
+                     Text="No events captured for this clip." />
+        </Grid>
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

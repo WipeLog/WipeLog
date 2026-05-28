@@ -1,0 +1,304 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Wipelog.App.ViewModels"
+             xmlns:suki="https://github.com/kikipoulet/SukiUI"
+             x:Class="Wipelog.App.Views.ClipDetailsView"
+             x:DataType="vm:ClipDetailsViewModel"
+             Background="Transparent">
+  <ScrollViewer Padding="16">
+    <StackPanel Spacing="{StaticResource Space12}">
+
+      <!-- Empty state when nothing is selected. A muted glass card keeps the
+           rail looking populated rather than an empty rectangle on the gradient. -->
+      <suki:GlassCard Padding="20" IsVisible="{Binding !HasSelection}">
+        <StackPanel Spacing="{StaticResource Space8}" Margin="0,28,0,28"
+                    HorizontalAlignment="Center">
+          <TextBlock Text="🎬" FontSize="32" HorizontalAlignment="Center" Opacity="0.5" />
+          <TextBlock HorizontalAlignment="Center"
+                     Foreground="{DynamicResource SukiMuteText}"
+                     Text="Select a clip to see details." />
+        </StackPanel>
+      </suki:GlassCard>
+
+      <!-- Selected clip: header card (title + pills + comp + metadata grid). -->
+      <suki:GlassCard Padding="16" IsVisible="{Binding HasSelection}">
+      <StackPanel Spacing="{StaticResource Space14}">
+
+        <!-- Title -->
+        <TextBlock Text="{Binding DisplayName}"
+                   FontSize="{StaticResource FontSizeClipTitle}" FontWeight="SemiBold"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource SukiText}" />
+
+        <!-- Badge + Result pills -->
+        <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space8}">
+          <Border Background="{DynamicResource SukiStrongBackground}"
+                  BorderBrush="{DynamicResource SukiControlBorderBrush}"
+                  BorderThickness="1"
+                  CornerRadius="{StaticResource RadiusMd}" Padding="{StaticResource PaddingIconButton}">
+            <TextBlock Text="{Binding BadgeText}" FontSize="{StaticResource FontSizeBody}"
+                       Foreground="{DynamicResource SukiLowText}" />
+          </Border>
+          <Border BorderThickness="0" CornerRadius="{StaticResource RadiusMd}"
+                  Padding="{StaticResource PaddingIconButton}"
+                  Background="{Binding ResultBrush}">
+            <TextBlock Text="{Binding ResultText}" FontSize="{StaticResource FontSizeBody}"
+                       Foreground="{DynamicResource TextInvertedBrush}" FontWeight="SemiBold" />
+          </Border>
+        </StackPanel>
+
+        <!-- Composition + death chip strip (hidden when no events sidecar). -->
+        <WrapPanel Orientation="Horizontal" IsVisible="{Binding HasAnyBadge}">
+          <Border Classes="chip" Margin="0,0,6,0" IsVisible="{Binding HasTank}"
+                  AutomationProperties.Name="Tank count">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+              <TextBlock Text="🛡" Foreground="{DynamicResource TankBrush}"
+                         FontSize="{StaticResource FontSizeMeta}" />
+              <TextBlock Text="{Binding TankCount}" Classes="tnum"
+                         FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+          <Border Classes="chip" Margin="0,0,6,0" IsVisible="{Binding HasHealer}"
+                  AutomationProperties.Name="Healer count">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+              <TextBlock Text="✚" Foreground="{DynamicResource HealerBrush}"
+                         FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding HealerCount}" Classes="tnum"
+                         FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+          <Border Classes="chip" Margin="0,0,6,0" IsVisible="{Binding HasDps}"
+                  AutomationProperties.Name="Dps count">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+              <TextBlock Text="⚔" Foreground="{DynamicResource DpsBrush}"
+                         FontSize="{StaticResource FontSizeMeta}" />
+              <TextBlock Text="{Binding DpsCount}" Classes="tnum"
+                         FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+          <Border Classes="chip" IsVisible="{Binding HasDeaths}"
+                  AutomationProperties.Name="Death count">
+            <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+              <TextBlock Text="💀" Foreground="{DynamicResource TextMutedBrush}"
+                         FontSize="{StaticResource FontSizeMeta}" />
+              <TextBlock Text="{Binding DeathCount}" Classes="tnum"
+                         FontSize="{StaticResource FontSizeMeta}" FontWeight="SemiBold" />
+            </StackPanel>
+          </Border>
+        </WrapPanel>
+
+        <!-- Metadata. The always-visible core trio sits in its own grid; the
+             type-specific rows live below a hairline divider, each gating
+             IsVisible on its own type/data flag so the block grows or shrinks
+             per ContentType. -->
+        <StackPanel Spacing="{StaticResource Space8}">
+          <Grid ColumnDefinitions="100,*" RowSpacing="{StaticResource Space4}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />  <!-- Started   -->
+              <RowDefinition Height="Auto" />  <!-- Duration  -->
+              <RowDefinition Height="Auto" />  <!-- Size      -->
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Column="0" Grid.Row="0" Classes="muted" Text="Started" />
+            <TextBlock Grid.Column="1" Grid.Row="0" Classes="tnum" Text="{Binding StartedAtText}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Classes="muted" Text="Duration" />
+            <TextBlock Grid.Column="1" Grid.Row="1" Classes="tnum" Text="{Binding DurationText}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Classes="muted" Text="Size" />
+            <TextBlock Grid.Column="1" Grid.Row="2" Classes="tnum" Text="{Binding FileSizeText}" />
+          </Grid>
+
+          <!-- Divider only when type-specific rows exist below. -->
+          <Rectangle Height="1" Fill="{DynamicResource SukiBorderBrush}"
+                     IsVisible="{Binding HasTypeDetails}" />
+
+          <Grid ColumnDefinitions="100,*" RowSpacing="{StaticResource Space4}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />  <!-- Encounter -->
+              <RowDefinition Height="Auto" />  <!-- Difficulty -->
+              <RowDefinition Height="Auto" />  <!-- Instance  -->
+              <RowDefinition Height="Auto" />  <!-- Dungeon   -->
+              <RowDefinition Height="Auto" />  <!-- Keystone  -->
+              <RowDefinition Height="Auto" />  <!-- Bracket   -->
+              <RowDefinition Height="Auto" />  <!-- Map       -->
+              <RowDefinition Height="Auto" />  <!-- Character -->
+              <RowDefinition Height="Auto" />  <!-- Spec      -->
+              <RowDefinition Height="Auto" />  <!-- Wipe HP%  -->
+            </Grid.RowDefinitions>
+
+            <!-- Raid-only -->
+            <TextBlock Grid.Column="0" Grid.Row="0" Classes="muted" Text="Encounter"
+                       IsVisible="{Binding IsRaid}" />
+            <TextBlock Grid.Column="1" Grid.Row="0" Text="{Binding DisplayName}"
+                       IsVisible="{Binding IsRaid}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="1" Classes="muted" Text="Difficulty"
+                       IsVisible="{Binding IsRaid}" />
+            <TextBlock Grid.Column="1" Grid.Row="1" Text="{Binding DifficultyText}"
+                       IsVisible="{Binding IsRaid}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="2" Classes="muted" Text="Instance"
+                       IsVisible="{Binding HasInstance}" />
+            <TextBlock Grid.Column="1" Grid.Row="2" Text="{Binding InstanceText}"
+                       IsVisible="{Binding HasInstance}" />
+
+            <!-- M+ only -->
+            <TextBlock Grid.Column="0" Grid.Row="3" Classes="muted" Text="Dungeon"
+                       IsVisible="{Binding HasDungeon}" />
+            <TextBlock Grid.Column="1" Grid.Row="3" Text="{Binding DungeonText}"
+                       IsVisible="{Binding HasDungeon}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="4" Classes="muted" Text="Keystone"
+                       IsVisible="{Binding IsMythicPlus}" />
+            <TextBlock Grid.Column="1" Grid.Row="4" Classes="tnum" Text="{Binding KeystoneLevelText}"
+                       IsVisible="{Binding IsMythicPlus}" />
+
+            <!-- Arena / Solo Shuffle -->
+            <TextBlock Grid.Column="0" Grid.Row="5" Classes="muted" Text="Bracket"
+                       IsVisible="{Binding HasBracket}" />
+            <TextBlock Grid.Column="1" Grid.Row="5" Text="{Binding BracketText}"
+                       IsVisible="{Binding HasBracket}" />
+
+            <!-- Battleground -->
+            <TextBlock Grid.Column="0" Grid.Row="6" Classes="muted" Text="Map"
+                       IsVisible="{Binding HasMap}" />
+            <TextBlock Grid.Column="1" Grid.Row="6" Text="{Binding MapText}"
+                       IsVisible="{Binding HasMap}" />
+
+            <!-- Character + Spec (any content with a resolved player) -->
+            <TextBlock Grid.Column="0" Grid.Row="7" Classes="muted" Text="Character"
+                       IsVisible="{Binding HasCharacter}" />
+            <TextBlock Grid.Column="1" Grid.Row="7" Text="{Binding CharacterText}"
+                       IsVisible="{Binding HasCharacter}" />
+
+            <TextBlock Grid.Column="0" Grid.Row="8" Classes="muted" Text="Spec"
+                       IsVisible="{Binding HasSpec}" />
+            <TextBlock Grid.Column="1" Grid.Row="8" Text="{Binding SpecText}"
+                       IsVisible="{Binding HasSpec}" />
+
+            <!-- Raid wipe HP%: surface "Wiped at 27%" for raid wipes when the
+                 sidecar carries boss_hp_percent. Hidden for kills, M+, PvP,
+                 and pre-feature clips. -->
+            <TextBlock Grid.Column="0" Grid.Row="9" Classes="muted" Text="Wipe"
+                       IsVisible="{Binding HasWipeHp}" />
+            <TextBlock Grid.Column="1" Grid.Row="9" Classes="tnum" Text="{Binding WipeHpText}"
+                       IsVisible="{Binding HasWipeHp}" />
+          </Grid>
+        </StackPanel>
+      </StackPanel>
+      </suki:GlassCard>
+
+      <!-- Notes card — free-form per-clip text. Commits on LostFocus (see
+           code-behind) so we save once when the user finishes editing
+           instead of per-keystroke. -->
+      <suki:GlassCard Padding="16" IsVisible="{Binding HasSelection}">
+        <StackPanel Spacing="{StaticResource Space6}">
+          <TextBlock Classes="title" Text="NOTES" />
+          <TextBox Name="NotesBox"
+                   Text="{Binding NotesText, Mode=TwoWay}"
+                   Watermark="Add notes — e.g. 0:42 missed Cinderbrew"
+                   AcceptsReturn="True"
+                   TextWrapping="Wrap"
+                   MinHeight="64"
+                   MaxHeight="200"
+                   VerticalContentAlignment="Top"
+                   LostFocus="OnNotesBoxLostFocus" />
+
+          <!-- Jump chips: one per MM:SS token found in the notes. Click seeks
+               the player. Strip hides when nothing was detected. -->
+          <ItemsControl ItemsSource="{Binding NoteTimestamps}"
+                        IsVisible="{Binding HasNoteTimestamps}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="vm:NoteTimestamp">
+                <Button Content="{Binding Label}"
+                        Tag="{Binding}"
+                        Click="OnTimestampChipClick"
+                        Padding="8,2" Margin="0,0,4,4"
+                        Background="{DynamicResource SukiStrongBackground}"
+                        BorderBrush="{DynamicResource SukiControlBorderBrush}"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource RadiusMd}"
+                        FontSize="{StaticResource FontSizeMeta}"
+                        FontWeight="SemiBold"
+                        Foreground="{DynamicResource SukiLowText}"
+                        ToolTip.Tip="Jump player to this timestamp" />
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+        </StackPanel>
+      </suki:GlassCard>
+
+      <!-- Tags card -->
+      <suki:GlassCard Padding="16" IsVisible="{Binding HasSelection}">
+        <StackPanel Spacing="{StaticResource Space6}" DataContext="{Binding TagsEditor}">
+          <TextBlock Classes="title" Text="TAGS" />
+          <ItemsControl ItemsSource="{Binding Tags}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate x:DataType="x:String">
+                <Border Classes="chip" Margin="0,0,4,4"
+                        Background="{DynamicResource SukiStrongBackground}"
+                        BorderBrush="{DynamicResource SukiControlBorderBrush}">
+                  <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}">
+                    <TextBlock Text="{Binding}" FontSize="{StaticResource FontSizeMeta}"
+                               Foreground="{DynamicResource SukiLowText}"
+                               VerticalAlignment="Center" />
+                    <Button Content="✕" Padding="4,0" FontSize="{StaticResource FontSizeCaption}"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{DynamicResource SukiMuteText}"
+                            Command="{Binding $parent[ItemsControl].((vm:TagsEditorViewModel)DataContext).RemoveTagCommand}"
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="{Binding StringFormat='Remove tag {0}'}" />
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="{StaticResource Space6}">
+            <AutoCompleteBox Grid.Column="0"
+                             Watermark="add tag…"
+                             ItemsSource="{Binding AvailableTags}"
+                             Text="{Binding DraftTag, Mode=TwoWay}"
+                             FilterMode="StartsWith" />
+            <Button Grid.Column="1" Content="+" Padding="10,0"
+                    Command="{Binding AddTagCommand}"
+                    AutomationProperties.Name="Add tag" />
+          </Grid>
+          <TextBlock FontSize="{StaticResource FontSizeMeta}"
+                     Foreground="{DynamicResource DangerBrush}"
+                     Text="{Binding ValidationError}"
+                     IsVisible="{Binding ValidationError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+        </StackPanel>
+      </suki:GlassCard>
+
+      <!-- Technical expander, kept transparent so the GlassCard wrapper supplies
+           the surface; matches the side-panel rhythm without a nested fill. -->
+      <suki:GlassCard Padding="8" IsVisible="{Binding HasSelection}">
+        <Expander Header="Technical" IsExpanded="False"
+                  Background="Transparent" BorderThickness="0">
+          <StackPanel Spacing="{StaticResource Space6}" Margin="8">
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto">
+              <TextBlock Grid.Column="0" Grid.Row="0" Classes="muted" Text="Encounter ID" />
+              <TextBlock Grid.Column="1" Grid.Row="0" Classes="tnum" Text="{Binding EncounterIdText}" />
+              <TextBlock Grid.Column="0" Grid.Row="1" Classes="muted" Text="Keystone level" />
+              <TextBlock Grid.Column="1" Grid.Row="1" Classes="tnum" Text="{Binding KeystoneLevelText}" />
+              <TextBlock Grid.Column="0" Grid.Row="2" Classes="muted" Text="Path" />
+              <TextBlock Grid.Column="1" Grid.Row="2" FontSize="{StaticResource FontSizeMeta}"
+                         TextWrapping="Wrap" Text="{Binding VideoPath}" />
+            </Grid>
+          </StackPanel>
+        </Expander>
+      </suki:GlassCard>
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

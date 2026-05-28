@@ -1,0 +1,32 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <ResourceDictionary.ThemeDictionaries>
+    <ResourceDictionary x:Key="Dark">
+      <!-- Structural brushes mirror SukiUI's dark palette so the custom views
+           blend with the SukiWindow surfaces. Base is transparent so the
+           SukiWindow gradient shows through; surfaces are neutral grays. -->
+      <SolidColorBrush x:Key="BackgroundBaseBrush"     Color="Transparent" />
+      <SolidColorBrush x:Key="BackgroundSurfaceBrush"  Color="#323232" />
+      <SolidColorBrush x:Key="BackgroundElevatedBrush" Color="#3a3a3a" />
+      <SolidColorBrush x:Key="BackgroundHoverBrush"    Color="#3f3f3f" />
+      <SolidColorBrush x:Key="BackgroundSelectedBrush" Color="#454545" />
+      <SolidColorBrush x:Key="BorderSubtleBrush"       Color="#404040" />
+      <SolidColorBrush x:Key="TextPrimaryBrush"        Color="#edffffff" />
+      <SolidColorBrush x:Key="TextSecondaryBrush"      Color="#caffffff" />
+      <SolidColorBrush x:Key="TextMutedBrush"          Color="#b4b4b4" />
+      <SolidColorBrush x:Key="TextInvertedBrush"       Color="#ffffff" />
+      <SolidColorBrush x:Key="AccentPrimaryBrush"      Color="#5865f2" />
+      <SolidColorBrush x:Key="AccentHoverBrush"        Color="#4752c4" />
+      <SolidColorBrush x:Key="SuccessBrush"            Color="#23a55a" />
+      <SolidColorBrush x:Key="WarningBrush"            Color="#d29922" />
+      <SolidColorBrush x:Key="WarningBackgroundBrush"  Color="#3d29a55a" />
+      <SolidColorBrush x:Key="DangerBrush"             Color="#f23f42" />
+      <SolidColorBrush x:Key="DangerMutedBrush"        Color="#80f23f42" />
+      <SolidColorBrush x:Key="DangerBadgeBackgroundBrush" Color="#40f23f42" />
+      <SolidColorBrush x:Key="FavoriteBrush"           Color="#f0b232" />
+      <SolidColorBrush x:Key="TankBrush"               Color="#5865f2" />
+      <SolidColorBrush x:Key="HealerBrush"             Color="#57f287" />
+      <SolidColorBrush x:Key="DpsBrush"                Color="#ed4245" />
+    </ResourceDictionary>
+  </ResourceDictionary.ThemeDictionaries>
+</ResourceDictionary>

@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Wipelog.App.Views.ConfirmDialog"
+        Width="420" SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Background="{DynamicResource BackgroundSurfaceBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}">
+  <Grid Margin="{StaticResource MarginDialog}" RowDefinitions="Auto,Auto,Auto" RowSpacing="{StaticResource Space16}">
+    <TextBlock Grid.Row="0" Name="TitleText" FontSize="{StaticResource FontSizeHeading}" FontWeight="SemiBold" />
+    <TextBlock Grid.Row="1" Name="MessageText" TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" />
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="{StaticResource Space8}">
+      <Button Name="CancelButton" Click="OnCancel" />
+      <Button Name="ConfirmButton" Classes="accent" Click="OnConfirm" />
+    </StackPanel>
+  </Grid>
+</Window>
