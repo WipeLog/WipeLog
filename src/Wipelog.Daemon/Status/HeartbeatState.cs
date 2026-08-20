@@ -43,6 +43,7 @@ internal sealed class HeartbeatState
     private string? _lastError;
     private DateTimeOffset? _lastErrorAt;
     private bool _advancedLoggingDisabled;
+    private string? _recorderError;
     private DiskUsageInfo? _diskUsage;
 
     public HeartbeatState(IClock clock)
@@ -85,6 +86,18 @@ internal sealed class HeartbeatState
         }
     }
 
+    /// <summary>
+    /// Sticky capture-failure flag — pass null when a clip finalizes with a
+    /// real file so the warning clears once the recorder provably works.
+    /// </summary>
+    public void SetRecorderError(string? message)
+    {
+        lock (_gate)
+        {
+            _recorderError = message;
+        }
+    }
+
     public void SetAdvancedLoggingDisabled(bool disabled)
     {
         lock (_gate)
@@ -122,6 +135,7 @@ internal sealed class HeartbeatState
                 LastError: _lastError)
             {
                 AdvancedLoggingDisabled = _advancedLoggingDisabled,
+                RecorderError = _recorderError,
                 DiskUsage = _diskUsage,
             };
         }
@@ -142,6 +156,7 @@ internal sealed class HeartbeatState
                 LastError: _lastError)
             {
                 AdvancedLoggingDisabled = _advancedLoggingDisabled,
+                RecorderError = _recorderError,
                 DiskUsage = _diskUsage,
             };
         }

@@ -66,6 +66,18 @@ public sealed record DaemonStatus(
     public bool AdvancedLoggingDisabled { get; init; }
 
     /// <summary>
+    /// Sticky capture-failure message: set when a recorder process dies,
+    /// refuses to start, or produces no output file (including the pre-roll
+    /// process), cleared when a clip finalizes with a real video on disk.
+    /// Unlike <see cref="LastError"/> (a transient tooltip line with a short
+    /// retention), this persists until the recorder demonstrably works again
+    /// so misconfiguration can't silently eat clips. Surfaced as a red row in
+    /// the GUI sidebar. Null default so old payloads deserialise cleanly.
+    /// </summary>
+    [JsonPropertyName("recorderError")]
+    public string? RecorderError { get; init; }
+
+    /// <summary>
     /// Latest disk-usage measurement, or null when the daemon hasn't measured
     /// yet. Null on old status payloads (pre-Stage-10b) so they deserialise
     /// cleanly; the GUI shows a placeholder in that case.

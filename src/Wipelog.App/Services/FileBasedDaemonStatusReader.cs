@@ -150,6 +150,7 @@ public sealed class FileBasedDaemonStatusReader : IDaemonStatusReader, IDisposab
             && a.LastError == b.LastError
             && a.Pid == b.Pid
             && a.AdvancedLoggingDisabled == b.AdvancedLoggingDisabled
+            && a.RecorderError == b.RecorderError
             // Record equality compares the usage fields; a new measurement
             // (~once/60s) is a meaningful transition that refreshes the bar.
             && a.DiskUsage == b.DiskUsage;

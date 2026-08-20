@@ -29,4 +29,21 @@ public interface IRecordingLifecycleObserver
     Task OnRecordingStartedAsync(RecordingMetadata metadata, CancellationToken ct);
     Task OnRecordingFinalizedAsync(ClipFinalization clip, CancellationToken ct);
     Task OnRecordingErrorAsync(string message, Exception? exception, CancellationToken ct);
+
+    /// <summary>
+    /// A capture process failed in a way that loses (or risks losing) video:
+    /// the recorder died mid-recording, refused to start, produced no output
+    /// file, or the pre-roll process exited unexpectedly. Unlike
+    /// <see cref="OnRecordingErrorAsync"/> (a transient per-clip toast), this
+    /// marks the recorder as unhealthy until <see cref="OnRecorderHealthyAsync"/>
+    /// proves otherwise — the daemon surfaces it as a persistent GUI warning.
+    /// Default no-op so observers that only track per-clip state need no change.
+    /// </summary>
+    Task OnRecorderUnhealthyAsync(string message, CancellationToken ct) => Task.CompletedTask;
+
+    /// <summary>
+    /// A clip finalized with a real video file on disk — capture demonstrably
+    /// works again, so any earlier unhealthy mark can be cleared.
+    /// </summary>
+    Task OnRecorderHealthyAsync(CancellationToken ct) => Task.CompletedTask;
 }

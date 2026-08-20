@@ -147,6 +147,48 @@ public class HeartbeatWriterTests
         Assert.Null(stale.LastError);
     }
 
+    private sealed class NoopNotifications : Wipelog.Daemon.Notifications.INotificationService
+    {
+        public Task NotifyClipSavedAsync(Wipelog.Core.Recording.ClipFinalization clip, CancellationToken ct) => Task.CompletedTask;
+        public Task NotifyErrorAsync(string title, string message, CancellationToken ct) => Task.CompletedTask;
+        public Task NotifyDiskWarningAsync(long freeGb, long minFreeGb, CancellationToken ct) => Task.CompletedTask;
+        public Task NotifyAutoDeleteAsync(int deletedCount, long bytesFreed, CancellationToken ct) => Task.CompletedTask;
+        public Task NotifyDiskFullFavoritesOnlyAsync(CancellationToken ct) => Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task DaemonLifecycleObserver_sets_and_clears_recorder_error()
+    {
+        var clock = new FakeClock(new DateTimeOffset(2026, 5, 11, 12, 0, 0, TimeSpan.Zero));
+        var state = new HeartbeatState(clock);
+        var observer = new DaemonLifecycleObserver(state, new NoopNotifications());
+
+        await observer.OnRecorderUnhealthyAsync("display not found", CancellationToken.None);
+        Assert.Equal("display not found", state.Snapshot().RecorderError);
+
+        await observer.OnRecorderHealthyAsync(CancellationToken.None);
+        Assert.Null(state.Snapshot().RecorderError);
+    }
+
+    [Fact]
+    public void HeartbeatState_recorder_error_is_sticky_until_cleared()
+    {
+        var clock = new FakeClock(new DateTimeOffset(2026, 5, 11, 12, 0, 0, TimeSpan.Zero));
+        var state = new HeartbeatState(clock);
+        Assert.Null(state.Snapshot().RecorderError);
+
+        state.SetRecorderError("gsr exited with code 51");
+        Assert.Equal("gsr exited with code 51", state.Snapshot().RecorderError);
+
+        // Unlike LastError there is no retention window — a broken recorder
+        // stays flagged across an idle night until capture provably works.
+        clock.Now = clock.Now.AddHours(12);
+        Assert.Equal("gsr exited with code 51", state.Snapshot().RecorderError);
+
+        state.SetRecorderError(null);
+        Assert.Null(state.Snapshot().RecorderError);
+    }
+
     [Fact]
     public void HeartbeatState_increments_clip_count_on_finalize()
     {

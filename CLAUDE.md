@@ -124,6 +124,15 @@ Wipelog relies on the 17-field advanced log block for kill-blow attribution, bos
 - **Status**: `DaemonStatus.AdvancedLoggingDisabled` (default `false`, opt-in init field — pre-Tier1-#8 clients deserialise without false positives) flows through the heartbeat JSON to the GUI. `FileBasedDaemonStatusReader.StatusEquals` includes the flag so the sidebar VM gets notified of transitions.
 - **GUI**: `DaemonStatusViewModel.AdvancedLoggingDisabled` projection feeds an amber warning row in the sidebar Status block (visible whenever the flag is set, regardless of recording state). The tooltip carries the actionable fix path: WoW → Network options → Advanced Combat Logging.
 
+### Recorder-failure warning (sticky "clips may be lost" row)
+
+A misconfigured capture (e.g. stale monitor name after an X11→Wayland switch: gsr exits 51 with "display not found") used to lose clips silently — the only trace was the journal. Capture failures now surface as a persistent red row in the GUI sidebar.
+
+- **Signal**: `IRecordingLifecycleObserver` grew two default-implemented methods — `OnRecorderUnhealthyAsync(message)` and `OnRecorderHealthyAsync()`. `RecorderController.NotifyCaptureFailureAsync` fires *both* the existing `OnRecordingErrorAsync` (toast + transient `LastError` tooltip) and the sticky unhealthy mark. Call sites: recorder died mid-recording, recorder failed to start, temp file missing at finalize, pre-roll `StartAsync` threw, and — new — the pre-roll process's `ExitedUnexpectedly` event (the controller now subscribes; reported fire-and-forget via `Task.Run` because the daemon may sit idle with no combat-log traffic to tick the event loop, and this failure typically happens at daemon startup, hours before the first pull).
+- **Clearing**: `OnRecorderHealthyAsync` fires at the end of `FinalizeAsync` when a clip finalized with a real video file — *except* when that finalize was itself triggered by the recorder dying (`_finalizingAfterRecorderDeath` flag; a salvaged partial file is not proof of health). No time-based retention (unlike `LastError`'s 5-minute window) — a broken recorder stays flagged across an idle night until capture provably works or the daemon restarts.
+- **Plumbing**: `HeartbeatState.SetRecorderError(string?)` → `DaemonStatus.RecorderError` (JSON `recorderError`, null default so old payloads deserialise) → `FileBasedDaemonStatusReader.StatusEquals` includes it → `DaemonStatusViewModel.RecorderError`/`HasRecorderError` → red `DangerBadgeBackgroundBrush` row in `MainWindow.axaml` sidebar footer ("Recorder error — clips may be lost"), full message incl. gsr's stderr tail in the tooltip.
+- Known trade-off: pre-roll-only breakage is cleared by any successful main-recorder finalize (both processes share target/settings, so in practice they break together).
+
 ### Content recording filters (CONTENT settings section)
 
 Opt-in filters let users skip content they don't care about (record Mythic raids only, ignore +2 keys, skip BGs). Defaults record everything — users opt into being more restrictive.

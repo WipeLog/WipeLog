@@ -48,4 +48,18 @@ internal sealed class DaemonLifecycleObserver : IRecordingLifecycleObserver
         _state.MarkError(message);
         await _notifications.NotifyErrorAsync("Wipelog error", message, ct).ConfigureAwait(false);
     }
+
+    // Capture failures also arrive via OnRecordingErrorAsync (toast + tooltip
+    // LastError); these two only maintain the sticky sidebar warning.
+    public Task OnRecorderUnhealthyAsync(string message, CancellationToken ct)
+    {
+        _state.SetRecorderError(message);
+        return Task.CompletedTask;
+    }
+
+    public Task OnRecorderHealthyAsync(CancellationToken ct)
+    {
+        _state.SetRecorderError(null);
+        return Task.CompletedTask;
+    }
 }

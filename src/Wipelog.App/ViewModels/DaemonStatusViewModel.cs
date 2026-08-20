@@ -74,6 +74,19 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
     private bool _advancedLoggingDisabled;
 
     /// <summary>
+    /// Mirrors <see cref="DaemonStatus.RecorderError"/>: the recorder (or the
+    /// pre-roll process) failed in a way that loses video. The sidebar binds a
+    /// red warning row to <see cref="HasRecorderError"/> with the full message
+    /// (incl. gsr's stderr tail) as tooltip; the daemon clears it once a clip
+    /// finalizes with a real file.
+    /// </summary>
+    [ObservableProperty]
+    private string _recorderError = string.Empty;
+
+    [ObservableProperty]
+    private bool _hasRecorderError;
+
+    /// <summary>
     /// Whole-drive usage as a 0–100% fill for the Storage-tab progress bar.
     /// 0 when the daemon is offline or the drive is unknown.
     /// </summary>
@@ -131,6 +144,7 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
         string ActivityLine,
         string ElapsedLine,
         bool AdvancedLoggingDisabled,
+        string RecorderError,
         double DiskUsagePercent,
         string DiskUsageText,
         bool HasDiskUsage,
@@ -171,6 +185,7 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
                 Offline: true, Recording: false, Idle: false,
                 ActivityLine: string.Empty, ElapsedLine: string.Empty,
                 AdvancedLoggingDisabled: false,
+                RecorderError: string.Empty,
                 DiskUsagePercent: diskPercent, DiskUsageText: diskText, HasDiskUsage: hasDisk, DiskBarBrushKey: diskBrushKey);
         }
 
@@ -196,6 +211,7 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
                 Offline: false, Recording: true, Idle: false,
                 ActivityLine: activity, ElapsedLine: elapsedStr,
                 AdvancedLoggingDisabled: status.AdvancedLoggingDisabled,
+                RecorderError: status.RecorderError ?? string.Empty,
                 DiskUsagePercent: diskPercent, DiskUsageText: diskText, HasDiskUsage: hasDisk, DiskBarBrushKey: diskBrushKey);
         }
 
@@ -211,6 +227,7 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
             Offline: false, Recording: false, Idle: true,
             ActivityLine: string.Empty, ElapsedLine: string.Empty,
             AdvancedLoggingDisabled: status.AdvancedLoggingDisabled,
+            RecorderError: status.RecorderError ?? string.Empty,
             DiskUsagePercent: diskPercent, DiskUsageText: diskText, HasDiskUsage: hasDisk, DiskBarBrushKey: diskBrushKey);
     }
 
@@ -226,6 +243,8 @@ public sealed partial class DaemonStatusViewModel : ViewModelBase, IDisposable
         ActivityLine = p.ActivityLine;
         ElapsedLine = p.ElapsedLine;
         AdvancedLoggingDisabled = p.AdvancedLoggingDisabled;
+        RecorderError = p.RecorderError;
+        HasRecorderError = p.RecorderError.Length > 0;
         DiskUsagePercent = p.DiskUsagePercent;
         DiskUsageText = p.DiskUsageText;
         HasDiskUsage = p.HasDiskUsage;

@@ -161,6 +161,8 @@ public class RecorderControllerTests
         public List<RecordingMetadata> Started { get; } = new();
         public List<ClipFinalization> Finalized { get; } = new();
         public List<(string Message, Exception? Ex)> Errors { get; } = new();
+        public List<string> Unhealthy { get; } = new();
+        public int HealthyCount { get; private set; }
 
         public Task OnRecordingStartedAsync(RecordingMetadata m, CancellationToken ct)
         { Started.Add(m); return Task.CompletedTask; }
@@ -168,6 +170,10 @@ public class RecorderControllerTests
         { Finalized.Add(c); return Task.CompletedTask; }
         public Task OnRecordingErrorAsync(string message, Exception? ex, CancellationToken ct)
         { Errors.Add((message, ex)); return Task.CompletedTask; }
+        public Task OnRecorderUnhealthyAsync(string message, CancellationToken ct)
+        { Unhealthy.Add(message); return Task.CompletedTask; }
+        public Task OnRecorderHealthyAsync(CancellationToken ct)
+        { HealthyCount++; return Task.CompletedTask; }
     }
 
     [Fact]
@@ -207,6 +213,11 @@ public class RecorderControllerTests
         Assert.Single(observer.Errors);
         Assert.Contains("139", observer.Errors[0].Message);
         Assert.Contains("Segmentation fault", observer.Errors[0].Message);
+        // Capture failure also marks the recorder unhealthy (sticky GUI warning) —
+        // and the failure-finalized partial clip must NOT clear it.
+        Assert.Single(observer.Unhealthy);
+        Assert.Contains("139", observer.Unhealthy[0]);
+        Assert.Equal(0, observer.HealthyCount);
 
         // The partial bytes on disk are still preserved as a failure clip.
         var files = Directory.GetFiles(dir.Path).OrderBy(f => f).ToList();
@@ -241,8 +252,36 @@ public class RecorderControllerTests
         Assert.Empty(observer.Finalized);
         Assert.Single(observer.Errors);
         Assert.Contains("temp file", observer.Errors[0].Message);
+        Assert.Single(observer.Unhealthy);
+        Assert.Equal(0, observer.HealthyCount);
         // No clip, no sidecar — but also nothing left lingering on disk.
         Assert.Empty(Directory.GetFiles(dir.Path));
+    }
+
+    [Fact]
+    public async Task Clean_finalize_reports_recorder_healthy()
+    {
+        using var dir = new TempDirectory();
+        var stub = new StubRecorder();
+        var observer = new CapturingObserver();
+        var controller = new RecorderController(
+            new EncounterDetector(), stub, new DefaultClipNamingStrategy(),
+            dir.Path, NullLogger<RecorderController>.Instance,
+            observer: observer);
+
+        var channel = Channel.CreateUnbounded<CombatLogEvent>();
+        await channel.Writer.WriteAsync(
+            new EncounterStart(T(19, 0, 0), 2902, "Boss", 16, 20, 2657),
+            TestContext.Current.CancellationToken);
+        await channel.Writer.WriteAsync(
+            new EncounterEnd(T(19, 5, 0), 2902, "Boss", 16, 20, Success: true),
+            TestContext.Current.CancellationToken);
+        channel.Writer.Complete();
+        await controller.RunAsync(channel.Reader, TestContext.Current.CancellationToken);
+
+        Assert.Single(observer.Finalized);
+        Assert.Empty(observer.Unhealthy);
+        Assert.Equal(1, observer.HealthyCount);
     }
 
     [Fact]

@@ -182,4 +182,36 @@ public class DaemonStatusViewModelTests
 
         Assert.False(p.AdvancedLoggingDisabled);
     }
+
+    [Fact]
+    public void Project_propagates_recorder_error_in_idle_and_recording()
+    {
+        var now = new DateTimeOffset(2026, 5, 19, 14, 30, 0, TimeSpan.Zero);
+        var error = "Recorder process died mid-recording (exitCode=51)";
+
+        var idle = new DaemonStatus("1", 1, now.AddMinutes(-1), now,
+            DaemonState.Idle, CurrentRecording: null, ClipsRecordedThisSession: 0,
+            LastError: null)
+        { RecorderError = error };
+        Assert.Equal(error, DaemonStatusViewModel.Project(idle, now).RecorderError);
+
+        var recording = idle with
+        {
+            State = DaemonState.Recording,
+            CurrentRecording = new RecordingStatus("RaidEncounter", "Boss", now.AddMinutes(-2), null),
+        };
+        Assert.Equal(error, DaemonStatusViewModel.Project(recording, now).RecorderError);
+    }
+
+    [Fact]
+    public void Project_recorder_error_empty_when_absent_or_offline()
+    {
+        var now = new DateTimeOffset(2026, 5, 19, 14, 30, 0, TimeSpan.Zero);
+        var status = new DaemonStatus("1", 1, now.AddMinutes(-1), now,
+            DaemonState.Idle, CurrentRecording: null, ClipsRecordedThisSession: 0,
+            LastError: null);
+
+        Assert.Equal(string.Empty, DaemonStatusViewModel.Project(status, now).RecorderError);
+        Assert.Equal(string.Empty, DaemonStatusViewModel.Project(null, now).RecorderError);
+    }
 }

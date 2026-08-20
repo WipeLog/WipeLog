@@ -128,6 +128,11 @@ public sealed class RecorderController : IAsyncDisposable
     // a few millisecond delay is fine.
     private RecorderExitedUnexpectedlyEventArgs? _pendingUnexpectedExit;
 
+    // Set when the active clip's finalize was triggered by the recorder dying,
+    // so that finalize — even if it salvages a partial file — doesn't count as
+    // proof of recorder health. Written and consumed under _stateLock.
+    private bool _finalizingAfterRecorderDeath;
+
     public RecorderController(
         EncounterDetector detector,
         IRecorder recorder,
@@ -168,6 +173,26 @@ public sealed class RecorderController : IAsyncDisposable
         _resolver = new PlayerSpecResolver(
             resolverLogger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<PlayerSpecResolver>.Instance);
         _recorder.ExitedUnexpectedly += OnRecorderExitedUnexpectedly;
+        if (_preRoll is not null)
+        {
+            _preRoll.ExitedUnexpectedly += OnPreRollExitedUnexpectedly;
+        }
+    }
+
+    private void OnPreRollExitedUnexpectedly(object? sender, RecorderExitedUnexpectedlyEventArgs args)
+    {
+        // Unlike the main recorder there is no clip to finalize, but a dead
+        // pre-roll process is the earliest signal that capture is broken
+        // (both processes share the same target/settings) — often at daemon
+        // startup, hours before the first pull. Surface it immediately rather
+        // than latching for the event loop, which only ticks on combat-log
+        // traffic. Fire-and-forget: the exit event arrives on a process
+        // watcher thread and the observers are expected to be cheap.
+        var stderr = string.IsNullOrEmpty(args.StderrTail) ? "(no stderr captured)" : args.StderrTail;
+        var message =
+            $"Pre-roll recorder exited unexpectedly (exitCode={args.ExitCode}). " +
+            $"Clips will record without pre-roll; capture settings may be broken. Last stderr:\n{stderr}";
+        _ = Task.Run(() => NotifyCaptureFailureAsync(message, ex: null, CancellationToken.None));
     }
 
     private void OnRecorderExitedUnexpectedly(object? sender, RecorderExitedUnexpectedlyEventArgs args)
@@ -192,6 +217,11 @@ public sealed class RecorderController : IAsyncDisposable
             {
                 _logger.LogWarning(ex,
                     "Failed to start pre-roll recorder; clips will record without pre-roll.");
+                await NotifyCaptureFailureAsync(
+                        "Failed to start pre-roll recorder; clips will record without pre-roll. " +
+                        "Capture settings may be broken.",
+                        ex, ct)
+                    .ConfigureAwait(false);
             }
         }
         try
@@ -276,7 +306,8 @@ public sealed class RecorderController : IAsyncDisposable
             $"Clip will be finalized as failure. Last stderr:\n{stderr}";
         _logger.LogError("{Message}", message);
 
-        await NotifyErrorAsync(message, ex: null, ct).ConfigureAwait(false);
+        await NotifyCaptureFailureAsync(message, ex: null, ct).ConfigureAwait(false);
+        _finalizingAfterRecorderDeath = true;
         await SafeStopAsync(success: false, ct).ConfigureAwait(false);
     }
 
@@ -400,7 +431,7 @@ public sealed class RecorderController : IAsyncDisposable
             _activePreRollPath = null;
             _identityBuffer = null;
             _eventBuffer = null;
-            await NotifyErrorAsync($"Failed to start recorder for {start.Metadata.DisplayName}", ex, ct)
+            await NotifyCaptureFailureAsync($"Failed to start recorder for {start.Metadata.DisplayName}", ex, ct)
                 .ConfigureAwait(false);
         }
     }
@@ -441,6 +472,37 @@ public sealed class RecorderController : IAsyncDisposable
         catch (Exception inner)
         {
             _logger.LogDebug(inner, "Lifecycle observer threw during OnRecordingError.");
+        }
+    }
+
+    /// <summary>
+    /// A failure that loses (or risks losing) video: per-clip error toast plus
+    /// the sticky unhealthy mark that persists until a clip finalizes cleanly.
+    /// </summary>
+    private async Task NotifyCaptureFailureAsync(string message, Exception? ex, CancellationToken ct)
+    {
+        await NotifyErrorAsync(message, ex, ct).ConfigureAwait(false);
+        if (_observer is null) return;
+        try
+        {
+            await _observer.OnRecorderUnhealthyAsync(message, ct).ConfigureAwait(false);
+        }
+        catch (Exception inner)
+        {
+            _logger.LogDebug(inner, "Lifecycle observer threw during OnRecorderUnhealthy.");
+        }
+    }
+
+    private async Task NotifyRecorderHealthyAsync(CancellationToken ct)
+    {
+        if (_observer is null) return;
+        try
+        {
+            await _observer.OnRecorderHealthyAsync(ct).ConfigureAwait(false);
+        }
+        catch (Exception inner)
+        {
+            _logger.LogDebug(inner, "Lifecycle observer threw during OnRecorderHealthy.");
         }
     }
 
@@ -488,6 +550,8 @@ public sealed class RecorderController : IAsyncDisposable
 
     private async Task FinalizeAsync(StopRecording stop, CancellationToken ct, int postRollSeconds = 0)
     {
+        var recorderDied = _finalizingAfterRecorderDeath;
+        _finalizingAfterRecorderDeath = false;
         var start = _activeStart!;
         var tempPath = _activeTempPath!;
         var preRollPath = _activePreRollPath;
@@ -513,7 +577,7 @@ public sealed class RecorderController : IAsyncDisposable
                 $"{tempPath} does not exist — nothing to finalize. " +
                 "The recorder process likely died mid-recording.";
             _logger.LogWarning("{Message}", message);
-            await NotifyErrorAsync(message, ex: null, ct).ConfigureAwait(false);
+            await NotifyCaptureFailureAsync(message, ex: null, ct).ConfigureAwait(false);
             TryDeletePreRoll(preRollPath);
             return;
         }
@@ -626,6 +690,10 @@ public sealed class RecorderController : IAsyncDisposable
         }
 
         await NotifyFinalizedAsync(finalization, ct).ConfigureAwait(false);
+        if (!recorderDied)
+        {
+            await NotifyRecorderHealthyAsync(ct).ConfigureAwait(false);
+        }
     }
 
     private async Task<string?> WriteEventsSidecarAsync(
@@ -976,6 +1044,10 @@ public sealed class RecorderController : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         _recorder.ExitedUnexpectedly -= OnRecorderExitedUnexpectedly;
+        if (_preRoll is not null)
+        {
+            _preRoll.ExitedUnexpectedly -= OnPreRollExitedUnexpectedly;
+        }
         if (_activeStart is not null)
         {
             await SafeStopAsync(success: false, ct: CancellationToken.None).ConfigureAwait(false);

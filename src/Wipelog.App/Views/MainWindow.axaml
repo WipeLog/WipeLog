@@ -97,6 +97,25 @@
                            TextWrapping="Wrap" />
               </StackPanel>
             </Border>
+            <!-- Sticky capture-failure warning: a recorder process died or
+                 produced no file, so clips are being lost. The daemon clears
+                 it once a clip finalizes with a real video. Full message
+                 (incl. gsr stderr, e.g. "display not found") in the tooltip. -->
+            <Border IsVisible="{Binding HasRecorderError}"
+                    Margin="17,6,0,0" Padding="6,3"
+                    Background="{DynamicResource DangerBadgeBackgroundBrush}"
+                    BorderBrush="{DynamicResource DangerBrush}" BorderThickness="0,0,0,2"
+                    CornerRadius="3"
+                    ToolTip.Tip="{Binding RecorderError}">
+              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                <TextBlock Text="!" FontSize="11" FontWeight="Bold"
+                           Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"
+                           Width="10" TextAlignment="Center" />
+                <TextBlock Text="Recorder error — clips may be lost" FontSize="10" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SukiLowText}" VerticalAlignment="Center"
+                           TextWrapping="Wrap" />
+              </StackPanel>
+            </Border>
           </StackPanel>
 
           <Button Margin="0"

@@ -297,4 +297,54 @@ public class RecorderControllerPreRollTests
                 "Events sidecar should also omit preRollSeconds when no pre-roll attached.");
         }
     }
+
+    /// <summary>
+    /// Waits on TCSes because the controller reports a pre-roll death
+    /// fire-and-forget from the process-exit thread.
+    /// </summary>
+    private sealed class HealthAwaitingObserver : IRecordingLifecycleObserver
+    {
+        public TaskCompletionSource<string> UnhealthyTcs { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+        public TaskCompletionSource<(string Message, Exception? Ex)> ErrorTcs { get; } =
+            new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task OnRecordingStartedAsync(RecordingMetadata m, CancellationToken ct) => Task.CompletedTask;
+        public Task OnRecordingFinalizedAsync(ClipFinalization c, CancellationToken ct) => Task.CompletedTask;
+        public Task OnRecordingErrorAsync(string message, Exception? ex, CancellationToken ct)
+        { ErrorTcs.TrySetResult((message, ex)); return Task.CompletedTask; }
+        public Task OnRecorderUnhealthyAsync(string message, CancellationToken ct)
+        { UnhealthyTcs.TrySetResult(message); return Task.CompletedTask; }
+        public Task OnRecorderHealthyAsync(CancellationToken ct) => Task.CompletedTask;
+    }
+
+    [Fact]
+    public async Task PreRoll_unexpected_exit_marks_recorder_unhealthy_without_combat_traffic()
+    {
+        using var dir = new TempDirectory();
+        var preRoll = new StubPreRollRecorder(Path.Combine(dir.Path, ".preroll"));
+        var observer = new HealthAwaitingObserver();
+        var controller = new RecorderController(
+            new EncounterDetector(), new StubRecorder(), new DefaultClipNamingStrategy(),
+            dir.Path, NullLogger<RecorderController>.Instance,
+            observer: observer,
+            preRoll: preRoll);
+
+        // The pre-roll process dies while the daemon is idle — e.g. gsr's
+        // "display not found" at startup. No combat-log events flow, so the
+        // warning must surface without the event loop ticking.
+        preRoll.Raise(new RecorderExitedUnexpectedlyEventArgs(51, "gsr error: display \"DisplayPort-0\" not found"));
+
+        var unhealthy = await observer.UnhealthyTcs.Task.WaitAsync(
+            TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Contains("51", unhealthy);
+        Assert.Contains("display", unhealthy);
+
+        // The per-clip error toast fires too, carrying the same stderr tail.
+        var (errorMessage, _) = await observer.ErrorTcs.Task.WaitAsync(
+            TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+        Assert.Contains("Pre-roll recorder exited unexpectedly", errorMessage);
+
+        await controller.DisposeAsync();
+    }
 }
