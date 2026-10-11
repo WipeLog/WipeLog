@@ -27,14 +27,15 @@ namespace Wipelog.App.ViewModels;
 
 public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
 {
-    private readonly LibVLC _libVlc;
+    private readonly IPlaybackEngine _engine;
     private readonly ClipListViewModel _list;
     private readonly ILogger<PlayerViewModel> _logger;
     private readonly TimelinePreferencesService _prefsService;
-    private Media? _currentMedia;
     private string? _currentVideoPath;
 
-    public MediaPlayer MediaPlayer { get; }
+    // The VideoView's render target; null when the engine has no native
+    // surface (tests), in which case the video area stays blank.
+    public MediaPlayer? MediaPlayer => _engine.NativePlayer;
     public TimelineViewModel Timeline { get; }
     public DisplayOptionsViewModel DisplayOptions { get; }
     public TimelinePreferences TimelinePreferences { get; private set; }
@@ -57,9 +58,9 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
             OnPropertyChanged();
             OnPropertyChanged(nameof(PositionText));
             // User scrub: bound Slider sets this; commit to VLC.
-            if (_isUserScrubbing && _currentMedia is not null)
+            if (_isUserScrubbing && _engine.HasLoadedMedia)
             {
-                MediaPlayer.Time = (long)value;
+                _engine.Time = (long)value;
             }
         }
     }
@@ -115,43 +116,31 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     public string DurationText => FormatTime((long)DurationMs);
 
     public PlayerViewModel(
-        LibVLC libVlc,
+        IPlaybackEngine engine,
         ClipListViewModel list,
         TimelineViewModel timeline,
         DisplayOptionsViewModel displayOptions,
         TimelinePreferencesService prefsService,
         ILogger<PlayerViewModel> logger)
     {
-        _libVlc = libVlc;
+        _engine = engine;
         _list = list;
         _logger = logger;
         _prefsService = prefsService;
         Timeline = timeline;
         DisplayOptions = displayOptions;
         TimelinePreferences = prefsService.Load();
-        MediaPlayer = new MediaPlayer(libVlc);
-        // The X11 vout module otherwise grabs keyboard input on the embedded
-        // subwindow whenever the cursor is over it, and those events never
-        // reach Avalonia's Tunnel KeyDown handler — so player shortcuts go
-        // dead while the mouse hovers the video.
-        MediaPlayer.EnableKeyInput = false;
-        MediaPlayer.EnableMouseInput = false;
-        MediaPlayer.TimeChanged += OnVlcTimeChanged;
-        MediaPlayer.LengthChanged += OnVlcLengthChanged;
-        MediaPlayer.Playing += OnVlcStateChanged;
-        MediaPlayer.Paused += OnVlcStateChanged;
-        MediaPlayer.Stopped += OnVlcStateChanged;
-        MediaPlayer.EndReached += OnVlcStateChanged;
-        MediaPlayer.Playing += OnVlcPlayingForTracks;
-        MediaPlayer.ESAdded += OnVlcEsAdded;
+        _engine.TimeChanged += OnVlcTimeChanged;
+        _engine.LengthChanged += OnVlcLengthChanged;
+        _engine.StateChanged += OnVlcStateChanged;
+        _engine.AudioTracksChanged += OnVlcAudioTracksChanged;
 
         AudioTracks.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasMultipleAudioTracks));
 
         _list.PropertyChanged += OnListPropertyChanged;
     }
 
-    private void OnVlcPlayingForTracks(object? sender, EventArgs e) => RefreshAudioTracks();
-    private void OnVlcEsAdded(object? sender, MediaPlayerESAddedEventArgs e) => RefreshAudioTracks();
+    private void OnVlcAudioTracksChanged(object? sender, EventArgs e) => RefreshAudioTracks();
 
     private void RefreshAudioTracks()
     {
@@ -159,23 +148,20 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
         // mutations land on the UI thread.
         Dispatcher.UIThread.Post(() =>
         {
-            var descriptions = MediaPlayer.AudioTrackDescription;
+            var descriptions = _engine.AudioTracks;
             var fresh = new List<AudioTrackChoice>
             {
                 new AudioTrackChoice(-1, "Mute (no audio)"),
             };
 
             int n = 1;
-            if (descriptions is not null)
+            foreach (var d in descriptions)
             {
-                foreach (var d in descriptions)
-                {
-                    // VLC also surfaces "Disable" as id=-1 — we already added our own.
-                    if (d.Id < 0) continue;
-                    var name = string.IsNullOrWhiteSpace(d.Name) ? $"Audio {n}" : d.Name;
-                    fresh.Add(new AudioTrackChoice(d.Id, $"Track {n} · {name}"));
-                    n++;
-                }
+                // VLC also surfaces "Disable" as id=-1 — we already added our own.
+                if (d.Id < 0) continue;
+                var name = string.IsNullOrWhiteSpace(d.Name) ? $"Audio {n}" : d.Name;
+                fresh.Add(new AudioTrackChoice(d.Id, $"Track {n} · {name}"));
+                n++;
             }
 
             // Avoid no-op churn: if the list is structurally identical to what's
@@ -196,7 +182,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
                 AudioTracks.Clear();
                 foreach (var t in fresh) AudioTracks.Add(t);
 
-                var activeId = MediaPlayer.AudioTrack;
+                var activeId = _engine.AudioTrack;
                 var pick = AudioTracks.FirstOrDefault(t => t.Id == activeId)
                     ?? AudioTracks.Skip(1).FirstOrDefault()    // first real track
                     ?? AudioTracks.FirstOrDefault();           // fall back to Mute
@@ -212,7 +198,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     partial void OnSelectedAudioTrackChanged(AudioTrackChoice? value)
     {
         if (_suppressAudioTrackApply || value is null) return;
-        try { MediaPlayer.SetAudioTrack(value.Id); }
+        try { _engine.SetAudioTrack(value.Id); }
         catch (Exception ex) { _logger.LogDebug(ex, "SetAudioTrack failed for id {Id}.", value.Id); }
     }
 
@@ -238,9 +224,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     {
         try
         {
-            _currentMedia?.Dispose();
-            _currentMedia = new Media(_libVlc, videoPath, FromType.FromPath);
-            MediaPlayer.Play(_currentMedia);
+            _engine.Load(videoPath);
             _currentVideoPath = videoPath;
             HasMedia = true;
             ErrorMessage = null;
@@ -256,8 +240,8 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     public void TogglePlayPause()
     {
         if (!HasMedia) return;
-        if (MediaPlayer.IsPlaying) MediaPlayer.Pause();
-        else MediaPlayer.Play();
+        if (_engine.IsPlaying) _engine.Pause();
+        else _engine.Play();
     }
 
     public void SeekRelative(TimeSpan delta)
@@ -276,7 +260,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     {
         if (!HasMedia) return;
         // SetPause(true) is a no-op when already paused — no need to guard.
-        MediaPlayer.SetPause(true);
+        _engine.SetPause(true);
     }
 
     public void UpdateTimelinePreferences(TimelinePreferences prefs)
@@ -287,7 +271,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
 
     public void Stop()
     {
-        MediaPlayer.Stop();
+        _engine.Stop();
     }
 
     public void StepFrame(bool forward)
@@ -295,13 +279,13 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
         if (!HasMedia) return;
         if (forward)
         {
-            try { MediaPlayer.NextFrame(); }
+            try { _engine.NextFrame(); }
             catch { /* not always supported by every codec; no-op */ }
         }
         else
         {
             // No native backward step in libvlc — approximate by ~16ms (60fps).
-            CommitSeek(MediaPlayer.Time - 16);
+            CommitSeek(_engine.Time - 16);
         }
     }
 
@@ -344,7 +328,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
 
     partial void OnVolumeChanged(int value)
     {
-        MediaPlayer.Volume = Math.Clamp(value, 0, 100);
+        _engine.Volume = Math.Clamp(value, 0, 100);
     }
 
     partial void OnPlaybackRateChanged(double value)
@@ -355,14 +339,14 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
 
     private void ApplyPlaybackRate(double rate)
     {
-        try { MediaPlayer.SetRate((float)rate); }
+        try { _engine.SetRate((float)rate); }
         catch (Exception ex) { _logger.LogDebug(ex, "SetRate failed for {Rate}.", rate); }
     }
 
     public void BeginScrub() => _isUserScrubbing = true;
     public void EndScrub()
     {
-        if (_isUserScrubbing && _currentMedia is not null)
+        if (_isUserScrubbing && _engine.HasLoadedMedia)
         {
             CommitSeek((long)_positionMs);
         }
@@ -373,37 +357,37 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     {
         if (DurationMs <= 0) return;
         ms = (long)Math.Clamp(ms, 0, DurationMs);
-        MediaPlayer.Time = ms;
+        _engine.Time = ms;
         _positionMs = ms;
         OnPropertyChanged(nameof(PositionMs));
         OnPropertyChanged(nameof(PositionText));
-        if (!MediaPlayer.IsPlaying)
+        if (!_engine.IsPlaying)
         {
             // libvlc quirk: paused seeks don't render the new frame and don't
             // fire TimeChanged. NextFrame forces the decoder to display the
             // target frame and re-pauses.
-            try { MediaPlayer.NextFrame(); }
+            try { _engine.NextFrame(); }
             catch { /* not every codec supports it; harmless to skip */ }
         }
     }
 
-    private void OnVlcTimeChanged(object? sender, MediaPlayerTimeChangedEventArgs e)
+    private void OnVlcTimeChanged(object? sender, long time)
     {
         // VLC fires this on its own thread — marshal to UI for the binding.
         Dispatcher.UIThread.Post(() =>
         {
             if (_isUserScrubbing) return;
-            _positionMs = e.Time;
+            _positionMs = time;
             OnPropertyChanged(nameof(PositionMs));
             OnPropertyChanged(nameof(PositionText));
         });
     }
 
-    private void OnVlcLengthChanged(object? sender, MediaPlayerLengthChangedEventArgs e)
+    private void OnVlcLengthChanged(object? sender, long length)
     {
         Dispatcher.UIThread.Post(() =>
         {
-            DurationMs = e.Length;
+            DurationMs = length;
             OnPropertyChanged(nameof(DurationText));
         });
     }
@@ -412,7 +396,7 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
     {
         Dispatcher.UIThread.Post(() =>
         {
-            IsPlaying = MediaPlayer.IsPlaying;
+            IsPlaying = _engine.IsPlaying;
             // libVLC resets rate to 1.0 on a fresh input; re-assert the user's
             // chosen speed once the new clip is actually playing. No-op when
             // already at 1.0 or the rate already matches.
@@ -434,17 +418,12 @@ public sealed partial class PlayerViewModel : ViewModelBase, IDisposable
 
     public void Dispose()
     {
-        try { MediaPlayer.Stop(); } catch { }
-        MediaPlayer.TimeChanged -= OnVlcTimeChanged;
-        MediaPlayer.LengthChanged -= OnVlcLengthChanged;
-        MediaPlayer.Playing -= OnVlcStateChanged;
-        MediaPlayer.Paused -= OnVlcStateChanged;
-        MediaPlayer.Stopped -= OnVlcStateChanged;
-        MediaPlayer.EndReached -= OnVlcStateChanged;
-        MediaPlayer.Playing -= OnVlcPlayingForTracks;
-        MediaPlayer.ESAdded -= OnVlcEsAdded;
-        _currentMedia?.Dispose();
-        MediaPlayer.Dispose();
+        _engine.TimeChanged -= OnVlcTimeChanged;
+        _engine.LengthChanged -= OnVlcLengthChanged;
+        _engine.StateChanged -= OnVlcStateChanged;
+        _engine.AudioTracksChanged -= OnVlcAudioTracksChanged;
+        // Stops playback, then releases the media + native player.
+        _engine.Dispose();
     }
 }
 

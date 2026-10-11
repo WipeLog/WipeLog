@@ -52,6 +52,7 @@ internal static class AppServices
             "--no-osd",
             "--no-snapshot-preview",
             "--vout=none"));
+        services.AddSingleton<IPlaybackEngine, VlcPlaybackEngine>();
         // SukiUI dialog + toast managers. One instance each, bound to the
         // hosts in SukiWindow and injected into DialogService / VMs.
         services.AddSingleton<ISukiDialogManager>(_ => new SukiDialogManager());
