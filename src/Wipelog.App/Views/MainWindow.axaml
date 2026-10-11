@@ -88,14 +88,16 @@
                     BorderBrush="{DynamicResource WarningBrush}" BorderThickness="0,0,0,2"
                     CornerRadius="3"
                     ToolTip.Tip="WoW's Advanced Combat Logging is disabled. Boss HP%, kill-blow attribution, and raid composition won't be captured. Fix it in WoW: Network options -> Advanced Combat Logging.">
-              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Text="!" FontSize="11" FontWeight="Bold"
+              <!-- Grid, not a horizontal StackPanel: a StackPanel measures children
+                   with unbounded width, so the label could never wrap. -->
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0" Text="!" FontSize="11" FontWeight="Bold"
                            Foreground="{DynamicResource WarningBrush}" VerticalAlignment="Center"
                            Width="10" TextAlignment="Center" />
-                <TextBlock Text="Advanced Combat Logging OFF" FontSize="10" FontWeight="SemiBold"
+                <TextBlock Grid.Column="1" Text="Advanced Combat Logging OFF" FontSize="10" FontWeight="SemiBold"
                            Foreground="{DynamicResource SukiLowText}" VerticalAlignment="Center"
                            TextWrapping="Wrap" />
-              </StackPanel>
+              </Grid>
             </Border>
             <!-- Sticky capture-failure warning: a recorder process died or
                  produced no file, so clips are being lost. The daemon clears
@@ -107,14 +109,16 @@
                     BorderBrush="{DynamicResource DangerBrush}" BorderThickness="0,0,0,2"
                     CornerRadius="3"
                     ToolTip.Tip="{Binding RecorderError}">
-              <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                <TextBlock Text="!" FontSize="11" FontWeight="Bold"
+              <!-- Grid, not a horizontal StackPanel: a StackPanel measures children
+                   with unbounded width, so the label could never wrap. -->
+              <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6" VerticalAlignment="Center">
+                <TextBlock Grid.Column="0" Text="!" FontSize="11" FontWeight="Bold"
                            Foreground="{DynamicResource DangerBrush}" VerticalAlignment="Center"
                            Width="10" TextAlignment="Center" />
-                <TextBlock Text="Recorder error — clips may be lost" FontSize="10" FontWeight="SemiBold"
+                <TextBlock Grid.Column="1" Text="Recorder error — clips may be lost" FontSize="10" FontWeight="SemiBold"
                            Foreground="{DynamicResource SukiLowText}" VerticalAlignment="Center"
                            TextWrapping="Wrap" />
-              </StackPanel>
+              </Grid>
             </Border>
           </StackPanel>
 

@@ -94,20 +94,22 @@
     </DataTemplate>
 
     <DataTemplate x:Key="PovCell" x:DataType="vm:ClipListItemViewModel">
-      <StackPanel Orientation="Horizontal" Spacing="{StaticResource Space6}" VerticalAlignment="Center">
+      <!-- Grid, not a horizontal StackPanel, so the name gets a bounded width
+           and TextTrimming can ellipsize it. -->
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="{StaticResource Space6}" VerticalAlignment="Center">
         <!-- Spec icon when known; class-color swatch otherwise. -->
-        <Border Width="18" Height="18" CornerRadius="3" ClipToBounds="True"
+        <Border Grid.Column="0" Width="18" Height="18" CornerRadius="3" ClipToBounds="True"
                 VerticalAlignment="Center" IsVisible="{Binding HasSpecIcon}">
           <Image Source="{Binding SpecIcon}" Stretch="UniformToFill"
                  Width="18" Height="18" />
         </Border>
-        <Border Width="12" Height="12" CornerRadius="2"
+        <Border Grid.Column="0" Width="12" Height="12" CornerRadius="2"
                 Background="{Binding ClassColorBrush}" VerticalAlignment="Center"
                 IsVisible="{Binding !HasSpecIcon}" />
-        <TextBlock Text="{Binding PovText}"
+        <TextBlock Grid.Column="1" Text="{Binding PovText}"
                    Foreground="{DynamicResource TextPrimaryBrush}"
                    VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-      </StackPanel>
+      </Grid>
     </DataTemplate>
   </UserControl.Resources>
 

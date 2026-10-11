@@ -79,8 +79,21 @@
           BorderBrush="{DynamicResource SukiBorderBrush}"
           BorderThickness="0,1,0,1"
           Padding="12,8">
-    <Grid ColumnDefinitions="Auto,Auto,Auto,Auto,Auto,*,Auto,Auto"
-          ColumnSpacing="{StaticResource Space12}">
+    <!-- Column 5 is a near-zero-weight spacer; the search column (6) takes
+         the remaining width up to its 280 px cap, then the spacer absorbs the
+         rest. A fixed-width search box used to push the date button past the
+         right edge at the default 1280 px window. -->
+    <Grid ColumnSpacing="{StaticResource Space12}">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="Auto" />
+        <ColumnDefinition Width="0.001*" />
+        <ColumnDefinition Width="*" MinWidth="100" MaxWidth="280" />
+        <ColumnDefinition Width="Auto" />
+      </Grid.ColumnDefinitions>
 
       <!-- Deaths segmented control -->
       <TextBlock Grid.Column="0" Classes="seg-label" Text="DEATHS" />
@@ -125,14 +138,13 @@
 
       <!-- Search box -->
       <TextBox Grid.Column="6" Name="SearchBox"
-               Width="280"
-               Watermark="Start typing…"
+               Watermark="Search…"
                Text="{Binding Filters.SearchText, Mode=TwoWay}" />
 
       <!-- Date range button → opens a flyout with presets + calendar pickers
            (see DateRangeFlyoutView). Label reflects the active range; the
            flyout's DataContext is the Filters VM so its bindings resolve. -->
-      <Button Grid.Column="7" Width="140"
+      <Button Grid.Column="7" Width="130"
               ToolTip.Tip="Date range"
               HorizontalContentAlignment="Stretch">
         <Grid ColumnDefinitions="*,Auto">

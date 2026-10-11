@@ -116,7 +116,7 @@
         <TextBlock FontSize="12"
                    Foreground="{DynamicResource TextSecondaryBrush}"
                    TextWrapping="Wrap"
-                   Text="Wipelog needs to know where WoW writes its combat logs. Click Detect to scan Lutris / Heroic / Bottles / Faugus / Wine prefixes, or set the path manually in the Service tab." />
+                   Text="Wipelog needs to know where WoW writes its combat logs. Click Detect to scan Lutris / Heroic / Bottles / Faugus / Wine prefixes, or set the path manually in the Storage tab." />
         <StackPanel Orientation="Horizontal" Spacing="10">
           <Button Classes="accent"
                   Command="{Binding DetectWowLogsCommand}"
@@ -222,12 +222,15 @@
       <!-- Content area: each tab is a ScrollViewer gated by IsXxxTab -->
       <Grid Grid.Column="1">
 
+        <!-- Each tab insets its card with Margin rather than ScrollViewer.Padding:
+             Avalonia measures scroll content without the padding, so wrapped
+             text would be laid out wider than it is drawn (see ClipDetailsView). -->
+
         <!-- ─── GENERAL ─── -->
-        <ScrollViewer Padding="24"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
                       IsVisible="{Binding IsGeneralTab}">
-          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="0,0,0,80" Padding="24">
+          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="24,24,24,80" Padding="24">
             <StackPanel Spacing="22">
 
             <StackPanel Spacing="8">
@@ -274,11 +277,10 @@
         </ScrollViewer>
 
         <!-- ─── RECORDING ─── -->
-        <ScrollViewer Padding="24"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
                       IsVisible="{Binding IsRecordingTab}">
-          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="0,0,0,80" Padding="24">
+          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="24,24,24,80" Padding="24">
             <StackPanel Spacing="22">
 
             <StackPanel Spacing="10">
@@ -596,11 +598,10 @@
         </ScrollViewer>
 
         <!-- ─── STORAGE ─── -->
-        <ScrollViewer Padding="24"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
                       IsVisible="{Binding IsStorageTab}">
-          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="0,0,0,80" Padding="24">
+          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="24,24,24,80" Padding="24">
             <StackPanel Spacing="22">
 
             <StackPanel Spacing="10">
@@ -686,11 +687,10 @@
         </ScrollViewer>
 
         <!-- ─── SERVICE ─── -->
-        <ScrollViewer Padding="24"
-                      HorizontalScrollBarVisibility="Disabled"
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
                       VerticalScrollBarVisibility="Auto"
                       IsVisible="{Binding IsServiceTab}">
-          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="0,0,0,80" Padding="24">
+          <suki:GlassCard MaxWidth="780" HorizontalAlignment="Left" Margin="24,24,24,80" Padding="24">
             <StackPanel Spacing="22">
 
             <StackPanel Spacing="10">

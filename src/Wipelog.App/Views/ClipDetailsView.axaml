@@ -5,8 +5,12 @@
              x:Class="Wipelog.App.Views.ClipDetailsView"
              x:DataType="vm:ClipDetailsViewModel"
              Background="Transparent">
-  <ScrollViewer Padding="16">
-    <StackPanel Spacing="{StaticResource Space12}">
+  <!-- Inset via the content's Margin, not ScrollViewer.Padding: Avalonia
+       measures the content at the full viewport width but arranges it inside
+       the padding, so every wrapping text laid out 32 px wider than the space
+       it got and the cards spilled past the 300 px rail. -->
+  <ScrollViewer>
+    <StackPanel Margin="16" Spacing="{StaticResource Space12}">
 
       <!-- Empty state when nothing is selected. A muted glass card keeps the
            rail looking populated rather than an empty rectangle on the gradient. -->
@@ -92,7 +96,7 @@
              IsVisible on its own type/data flag so the block grows or shrinks
              per ContentType. -->
         <StackPanel Spacing="{StaticResource Space8}">
-          <Grid ColumnDefinitions="100,*" RowSpacing="{StaticResource Space4}">
+          <Grid ColumnDefinitions="80,*" RowSpacing="{StaticResource Space4}">
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto" />  <!-- Started   -->
               <RowDefinition Height="Auto" />  <!-- Duration  -->
@@ -113,7 +117,16 @@
           <Rectangle Height="1" Fill="{DynamicResource SukiBorderBrush}"
                      IsVisible="{Binding HasTypeDetails}" />
 
-          <Grid ColumnDefinitions="100,*" RowSpacing="{StaticResource Space4}">
+          <!-- Values wrap, and the label column is 80 (longest label is ~68 px)
+               so a value's widest unbreakable word (e.g. "DefiasBrotherhood-EU")
+               fits the value column; anything wider makes the card wider than
+               the 300 px rail. -->
+          <Grid ColumnDefinitions="80,*" RowSpacing="{StaticResource Space4}">
+            <Grid.Styles>
+              <Style Selector="TextBlock">
+                <Setter Property="TextWrapping" Value="Wrap" />
+              </Style>
+            </Grid.Styles>
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto" />  <!-- Encounter -->
               <RowDefinition Height="Auto" />  <!-- Difficulty -->
@@ -287,13 +300,16 @@
         <Expander Header="Technical" IsExpanded="False"
                   Background="Transparent" BorderThickness="0">
           <StackPanel Spacing="{StaticResource Space6}" Margin="8">
-            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto">
+            <!-- Path gets its own full-width row: its widest unbreakable chunk
+                 next to a 120 px label made even the collapsed expander wider
+                 than the rail. -->
+            <Grid ColumnDefinitions="120,*" RowDefinitions="Auto,Auto,Auto,Auto">
               <TextBlock Grid.Column="0" Grid.Row="0" Classes="muted" Text="Encounter ID" />
               <TextBlock Grid.Column="1" Grid.Row="0" Classes="tnum" Text="{Binding EncounterIdText}" />
               <TextBlock Grid.Column="0" Grid.Row="1" Classes="muted" Text="Keystone level" />
               <TextBlock Grid.Column="1" Grid.Row="1" Classes="tnum" Text="{Binding KeystoneLevelText}" />
               <TextBlock Grid.Column="0" Grid.Row="2" Classes="muted" Text="Path" />
-              <TextBlock Grid.Column="1" Grid.Row="2" FontSize="{StaticResource FontSizeMeta}"
+              <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="3" FontSize="{StaticResource FontSizeMeta}"
                          TextWrapping="Wrap" Text="{Binding VideoPath}" />
             </Grid>
           </StackPanel>
