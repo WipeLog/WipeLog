@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Visual snapshot tests: renders real views headlessly through Skia and
+       writes PNG + visual-tree dumps to <repo>/snapshots/. Not regression
+       assertions — they exist so humans and agents can SEE the UI. -->
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <OutputType>Exe</OutputType>
+    <!-- Same Tmds.DBus.Protocol advisory the App project suppresses; it
+         arrives transitively through the App reference. -->
+    <NoWarn>$(NoWarn);NU1903</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Wipelog.App\Wipelog.App.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageReference Include="xunit.v3" Version="2.0.1" />
+    <!-- Must match the App's Avalonia version exactly (11.3.15). -->
+    <PackageReference Include="Avalonia.Headless" Version="11.3.15" />
+    <PackageReference Include="Avalonia.Skia" Version="11.3.15" />
+  </ItemGroup>
+</Project>

@@ -200,3 +200,32 @@ Per-clip free-form notes persist on the `notes` column added in migration `006_c
 - `RecordingEventBuffer.EvictExpired` runs on every `AddDamage` call and walks the cutoff forward across **all buckets**. This is fine because kill-blow attribution happens at `Observe(UnitDied)` time, not at `Build()`. If you ever move attribution back to Build, eviction will silently wipe the data you need.
 - For non-ASCII player names: write paths must use `UnsafeRelaxedJsonEscaping`. Read paths don't care.
 - The user runs from `~/bin/wipelog/`, not from the source tree. After daemon changes, redeploy via the `dotnet publish --no-self-contained` line above before they can test.
+
+## Visual snapshots (you cannot see the app; look at pictures of it)
+
+After ANY change to a `.axaml` file, code-behind, a style, a converter, or a ViewModel
+property a view binds to:
+
+1. Run `dotnet test tests/Wipelog.App.Snapshots`.
+2. Open the affected `snapshots/*.png` and read the matching `snapshots/*.txt` dump.
+3. In your reply, describe what the screenshot shows in two or three concrete sentences
+   (positions, sizes, text, anything clipped or at 0x0) BEFORE claiming the task is done.
+
+Never say a UI change "looks correct" or "should render fine" without having opened the
+image in the same turn. If no snapshot test covers the view you touched, add one first.
+
+When a visual bug is reported: reproduce it in a snapshot test, run it, show the image
+and dump, state the suspected cause, and only then change code. If it cannot be
+reproduced, ask for a screenshot instead of guessing.
+
+Known limits: PlayerView's LibVLC VideoView renders blank in headless. `monospace`
+falls back to Inter. Emoji glyphs depend on host fonts.
+
+Architecture rules the snapshots depend on:
+- Behaviour lives in ViewModels (CommunityToolkit.Mvvm). XAML binds only.
+- Views declare `x:DataType` and `x:CompileBindings="True"`.
+- No hard-coded colours/margins/font sizes in views; use SukiUI/theme resources.
+- Services reach ViewModels through interfaces so views can be constructed with fakes.
+- Timers/animations do not advance by themselves in headless tests; use
+  `AvaloniaHeadlessPlatform.ForceRenderTimerTick()` and `Dispatcher.UIThread.RunJobs()`.
+- A control with 0x0 Bounds in the dump is a layout bug until proven otherwise.

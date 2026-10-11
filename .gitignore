@@ -33,6 +33,7 @@ Thumbs.db
 #dist
 dist/
 screenshots/*
+snapshots/
 
 # Scratch dir for local debugging artifacts (not tracked)
 tmp/
