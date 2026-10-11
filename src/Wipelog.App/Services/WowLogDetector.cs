@@ -28,7 +28,7 @@ public sealed record DetectedLogPath(
 
 /// <summary>
 /// Discovers WoW combat-log directories under the well-known Linux
-/// launcher prefixes (Lutris, Heroic, Bottles, raw Wine). Used by the
+/// launcher prefixes (Lutris, Heroic, Bottles, Faugus, raw Wine). Used by the
 /// first-run onboarding banner in Settings: the user clicks "Detect WoW
 /// logs", we offer the candidates, and they pick one with a click.
 ///
@@ -87,7 +87,9 @@ public sealed class WowLogDetector : IWowLogDetector
     public static IReadOnlyList<string> DefaultSearchRoots()
     {
         var home = Environment.GetEnvironmentVariable("HOME") ?? ".";
-        return new[]
+        var xdgConfig = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+        var configHome = string.IsNullOrEmpty(xdgConfig) ? Path.Combine(home, ".config") : xdgConfig;
+        var roots = new List<string>
         {
             // Lutris default install location — one subdir per game.
             Path.Combine(home, "Games"),
@@ -99,9 +101,51 @@ public sealed class WowLogDetector : IWowLogDetector
             Path.Combine(home, ".var", "app", "com.usebottles.bottles", "data", "bottles", "bottles"),
             // Bottles, non-flatpak.
             Path.Combine(home, ".local", "share", "bottles", "bottles"),
+            // Faugus Launcher default — one subdir per prefix (~/Faugus/<name>).
+            Path.Combine(home, "Faugus"),
             // Raw Wine — itself a single prefix, not a parent of them.
             Path.Combine(home, ".wine"),
         };
+        foreach (var faugusRoot in FaugusConfiguredPrefixRoots(home, configHome))
+        {
+            if (!roots.Contains(faugusRoot, StringComparer.Ordinal)) roots.Add(faugusRoot);
+        }
+        return roots;
+    }
+
+    /// <summary>
+    /// Faugus lets the user move its prefix root; the choice is stored as
+    /// <c>default-prefix</c> in <c>faugus-launcher/config.json</c> (native
+    /// config dir, or the flatpak's private one). Returns every configured
+    /// root found; missing/unreadable configs contribute nothing.
+    /// </summary>
+    internal static IEnumerable<string> FaugusConfiguredPrefixRoots(string home, string configHome)
+    {
+        var configs = new[]
+        {
+            Path.Combine(configHome, "faugus-launcher", "config.json"),
+            Path.Combine(home, ".var", "app", "io.github.Faugus.faugus-launcher", "config", "faugus-launcher", "config.json"),
+        };
+        foreach (var config in configs)
+        {
+            string? root = null;
+            try
+            {
+                if (!File.Exists(config)) continue;
+                using var doc = System.Text.Json.JsonDocument.Parse(File.ReadAllText(config));
+                if (doc.RootElement.ValueKind == System.Text.Json.JsonValueKind.Object
+                    && doc.RootElement.TryGetProperty("default-prefix", out var prop)
+                    && prop.ValueKind == System.Text.Json.JsonValueKind.String)
+                {
+                    root = prop.GetString();
+                }
+            }
+            catch
+            {
+                // Malformed / unreadable config — fall back to the default root.
+            }
+            if (!string.IsNullOrWhiteSpace(root)) yield return root;
+        }
     }
 
     public IReadOnlyList<DetectedLogPath> Detect()

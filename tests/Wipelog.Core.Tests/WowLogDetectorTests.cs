@@ -161,4 +161,60 @@ public class WowLogDetectorTests
         var hit = Assert.Single(detector.Detect());
         Assert.Equal(3, hit.LogFileCount);
     }
+
+    [Fact]
+    public void Default_search_roots_include_the_Faugus_prefix_dir()
+    {
+        var home = Environment.GetEnvironmentVariable("HOME") ?? ".";
+        Assert.Contains(Path.Combine(home, "Faugus"), WowLogDetector.DefaultSearchRoots());
+    }
+
+    [Fact]
+    public void Detect_finds_logs_in_a_Faugus_prefix()
+    {
+        // Faugus layout: ~/Faugus/<prefix-name>/drive_c/... — one nesting level.
+        using var dir = new TempDirectory();
+        var faugus = Path.Combine(dir.Path, "Faugus");
+        var expected = PlantLogFile(Path.Combine(faugus, "battlenet"), "WoWCombatLog-100926_201500.txt");
+
+        var hit = Assert.Single(new WowLogDetector(new[] { faugus }).Detect());
+        Assert.Equal(expected, hit.Path);
+    }
+
+    [Fact]
+    public void Faugus_configured_prefix_root_is_read_from_native_and_flatpak_configs()
+    {
+        using var dir = new TempDirectory();
+        var home = dir.Path;
+        var configHome = Path.Combine(home, ".config");
+        Directory.CreateDirectory(Path.Combine(configHome, "faugus-launcher"));
+        File.WriteAllText(Path.Combine(configHome, "faugus-launcher", "config.json"),
+            """{ "default-prefix": "/mnt/games/Faugus", "mangohud": false }""");
+        var flatpakConfigDir = Path.Combine(home, ".var", "app", "io.github.Faugus.faugus-launcher", "config", "faugus-launcher");
+        Directory.CreateDirectory(flatpakConfigDir);
+        File.WriteAllText(Path.Combine(flatpakConfigDir, "config.json"), """{ "default-prefix": "/data/faugus" }""");
+
+        var roots = WowLogDetector.FaugusConfiguredPrefixRoots(home, configHome).ToList();
+
+        Assert.Equal(new[] { "/mnt/games/Faugus", "/data/faugus" }, roots);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("not json")]
+    [InlineData("""{ "mangohud": true }""")]
+    [InlineData("""{ "default-prefix": 42 }""")]
+    [InlineData("""{ "default-prefix": "" }""")]
+    public void Faugus_config_that_is_missing_or_unusable_contributes_no_roots(string? content)
+    {
+        using var dir = new TempDirectory();
+        var configHome = Path.Combine(dir.Path, ".config");
+        if (content is not null)
+        {
+            Directory.CreateDirectory(Path.Combine(configHome, "faugus-launcher"));
+            File.WriteAllText(Path.Combine(configHome, "faugus-launcher", "config.json"), content);
+        }
+
+        Assert.Empty(WowLogDetector.FaugusConfiguredPrefixRoots(dir.Path, configHome));
+    }
 }

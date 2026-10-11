@@ -116,7 +116,7 @@
         <TextBlock FontSize="12"
                    Foreground="{DynamicResource TextSecondaryBrush}"
                    TextWrapping="Wrap"
-                   Text="Wipelog needs to know where WoW writes its combat logs. Click Detect to scan Lutris / Heroic / Bottles / Wine prefixes, or set the path manually in the Service tab." />
+                   Text="Wipelog needs to know where WoW writes its combat logs. Click Detect to scan Lutris / Heroic / Bottles / Faugus / Wine prefixes, or set the path manually in the Service tab." />
         <StackPanel Orientation="Horizontal" Spacing="10">
           <Button Classes="accent"
                   Command="{Binding DetectWowLogsCommand}"
